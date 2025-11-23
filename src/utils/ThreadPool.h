@@ -16,18 +16,17 @@ class ThreadPool{
 public:
     ThreadPool();
     ~ThreadPool();
-    static ThreadPool* instance();
     //初始化
-    void initialize(size_t num_threads);
+    void Initialize(size_t num_threads);
     //线程开始
-    void start();
+    void Start();
     //线程结束
-    void stop();
+    void Stop();
     //等待线程
-    void wait();
+    void Wait();
     //添加任务
     template <typename F, typename... Args>
-    void enqueue(F&& f, Args&&... args){
+    void Enqueue(F&& f, Args&&... args){
         auto task = std::make_shared<std::packaged_task<void()>>(
             std::bind(std::forward<F>(f), std::forward<Args>(args)...)
         );
@@ -38,7 +37,7 @@ public:
         m_cond.notify_one();
     }
     //获取线程状态
-    bool get_state();
+    bool GetState();
 private:
     std::vector<std::thread> m_workers;
     std::queue<std::function<void()>> m_tasks;
@@ -48,6 +47,15 @@ private:
     std::atomic<bool> m_stop_flag;
     
     size_t m_num_threads;
+};
+
+class ThreadHeadler{
+public:
+    static ThreadPool* Instance(){
+        static ThreadPool thread_pool;
+
+        return &thread_pool;
+    }
 };
 
 #endif

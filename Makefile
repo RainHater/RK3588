@@ -9,7 +9,7 @@ SCRIPTS_DIR = ${ROOT_DIR}/scripts
 THIRD_PARTY_PYTHON_DIR = ${SCRIPTS_DIR}/python/3rdparty
 
 # === 编译选项 ===
-CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=Release
+CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=Debug
 THREAD_NUM := 14
 
 .ONESHELL:
@@ -64,3 +64,7 @@ opencv:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
+spdlog:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
+	

@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 import configparser
 from pathlib import Path
@@ -7,6 +8,7 @@ from typing import Tuple
 
 ROOT_DIR = os.environ.get('ROOT_DIR')
 BUILD_DIR = os.environ.get('BUILD_DIR')
+INSTALL_DIR = os.environ.get('INSTALL_DIR')
 THREAD_NUM = os.environ.get('THREAD_NUM')
 THIRD_PARTY_DIR = os.environ.get('THIRD_PARTY_DIR')
 THIRD_PARTY_PYTHON_DIR = os.environ.get('THIRD_PARTY_PYTHON_DIR')
@@ -93,18 +95,14 @@ def MakeInstall(build_dir: str):
         print("Make 安装失败！")
         print("错误码:", result.returncode)
 
-# CMakeConfigure('opencv')
-# MakeBuild('opencv')
-build_dir, ok_file = GetFilePathOK('opencv')
-scripts_dir = GetScriptsDir('opencv')
-src_dir = GetSrcDir('opencv')
-res = FindFileOK(build_dir, ok_file)
-if not res:
-    CMakeConfigure(scripts_dir, build_dir, src_dir)
-    MakeBuild(build_dir)
+def CopyFolder(src: Path, dec: Path):
+    dec.mkdir(parents=True, exist_ok=True)
 
-print(f'ok_file: {ok_file}')
-print(f'build_dir: {build_dir}')
-print(f'scripts_dir: {scripts_dir}')
-print(f'src_dir: {src_dir}')
-print(f'res: {res}')
+    for item in src.iterdir():
+        target = dec / item.name
+        if item.is_dir():
+            shutil.copytree(item, target, dirs_exist_ok=True)
+        else:
+            shutil.copy2(item, target)
+
+    print(f'{src} 复制到 {dec}')

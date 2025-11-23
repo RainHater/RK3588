@@ -4,3 +4,15 @@
 [submodule "3rdparty/opencv_contrib-4.x"]
 	path = 3rdparty/opencv_contrib-4.x
 	url = https://github.com/opencv/opencv_contrib.git
+[submodule "3rdparty/ffmpeg"]
+	path = 3rdparty/ffmpeg
+	url = https://github.com/FFmpeg/FFmpeg.git
+[submodule "3rdparty/spdlog"]
+	path = 3rdparty/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "3rdparty/librga"]
+	path = 3rdparty/librga
+	url = https://github.com/airockchip/librga.git
+[submodule "3rdparty/mpp"]
+	path = 3rdparty/mpp
+	url = https://github.com/rockchip-linux/mpp.git

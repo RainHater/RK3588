@@ -17,17 +17,11 @@ ThreadPool::~ThreadPool(){
     }
 }
 
-ThreadPool* ThreadPool::instance(){
-    static ThreadPool thread_pool;
-
-    return &thread_pool;
-}
-
-void ThreadPool::initialize(size_t num_threads){
+void ThreadPool::Initialize(size_t num_threads){
     m_num_threads = num_threads;
 }
 
-void ThreadPool::start(){
+void ThreadPool::Start(){
     for (size_t i = 0; i < m_num_threads; i ++){
         m_workers.emplace_back([this](){
             while(true){
@@ -47,7 +41,7 @@ void ThreadPool::start(){
     }
 }
 
-void ThreadPool::stop(){
+void ThreadPool::Stop(){
     {
         std::unique_lock<std::mutex> lock(m_queue_mutex);
         m_stop_flag = true;
@@ -55,10 +49,10 @@ void ThreadPool::stop(){
     m_cond.notify_all();
 }
 
-void ThreadPool::wait(){
+void ThreadPool::Wait(){
     while(!m_stop_flag);
 }
 
-bool ThreadPool::get_state(){
+bool ThreadPool::GetState(){
     return !m_stop_flag.load();
 }
