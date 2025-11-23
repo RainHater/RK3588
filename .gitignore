@@ -1,4 +1,6 @@
 .cache/
 build/
+target/
+__pycache__/
 
 .DS_Store

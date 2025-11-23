@@ -1,15 +1,28 @@
 # === 项目信息 ===
 PROJECT_NAME := app
 
-ROOT_DIR := ${PWD}
-THIRD_PARTY_DIR := ${ROOT_DIR}/3rdparty
-BUILD_DIR := ${ROOT_DIR}/build
-INSTALL_DIR  := ${${ROOT_DIR}}install
-
+ROOT_DIR = ${PWD}
+BUILD_DIR = ${ROOT_DIR}/build
+INSTALL_DIR = ${ROOT_DIR}/target
+THIRD_PARTY_DIR = ${ROOT_DIR}/3rdparty
+SCRIPTS_DIR = ${ROOT_DIR}/scripts
+THIRD_PARTY_PYTHON_DIR = ${SCRIPTS_DIR}/python/3rdparty
 
 # === 编译选项 ===
 CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=Release
 THREAD_NUM := 14
+
+.ONESHELL:
+setenvs = \
+    set_envs() { \
+        export ROOT_DIR=${ROOT_DIR}; \
+		export BUILD_DIR=${BUILD_DIR}; \
+        export THIRD_PARTY_DIR=${THIRD_PARTY_DIR}; \
+        export INSTALL_DIR=${INSTALL_DIR}; \
+		export THREAD_NUM=${THREAD_NUM}; \
+		export THIRD_PARTY_PYTHON_DIR=${THIRD_PARTY_PYTHON_DIR}; \
+    }; \
+    set_envs
 
 # === 默认目标 ===
 .PHONY: all
@@ -48,22 +61,6 @@ run: build
 
 .PHONY: opencv
 opencv:
-	@[ -e ${BUILD_DIR}/$@/.build_ok ] && echo "$@ compilation completed..." || mkdir -p ${BUILD_DIR}/$@
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
-	cd ${BUILD_DIR}/$@ && \
-	cmake -DCMAKE_BUILD_TYPE=Release \
-		-DSMALL_LOCALSIZE=ON -DENABLE_FAST_MATH=ON -DWITH_IPP=OFF \
-		-DUSE_O3=ON -DENABLE_CXX11=ON -DWITH_TBB=ON -DWITH_OPENMP=ON -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DWITH_WEBP=OFF \
-		-DWITH_OPENCL=ON -DWITH_OPENGL=OFF -DWITH_QT=OFF -DWITH_GTK=ON -DWITH_GTK_2_X=ON -DWITH_CUDA=OFF \
-		-DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_opencv_apps=OFF -DBUILD_ZLIB=OFF \
-		-DWITH_FFMPEG=OFF -DOPENCV_FFMPEG_SKIP_BUILD_CHECK=OFF -DBUILD_opencv_objdetect=ON \
-		-DBUILD_opencv_calib3d=ON -DBUILD_opencv_dnn=ON -DBUILD_opencv_features2d=ON \
-		-DBUILD_opencv_flann=ON -DBUILD_opencv_gapi=OFF -DBUILD_opencv_ml=OFF \
-		-DWITH_GSTREAMER=OFF -DWITH_JAVA=OFF -DOPENCV_ENABLE_FREE=ON \
-		-DWITH_JPEG=ON \
-		-DBUILD_opencv_stitching=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF \
-		-DWITH_FREETYPE=ON -DOPENCV_EXTRA_MODULES_PATH=$(THIRD_PARTY_DIR)/opencv_contrib-4.x/modules \
-		-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
-		-DINSTALL_DIR=${INSTALL_DIR} ${BUILD_DIR}/$@ $(THIRD_PARTY_DIR)/$@ && \
-	make -j${THREAD_NUM} && make install && cd -
-	touch ${BUILD_DIR}/$@/.build_ok
