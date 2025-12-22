@@ -5,7 +5,7 @@ sys.path.insert(0, os.environ.get('ROOT_DIR'))
 
 from scripts.python.compile.utils import *
 
-NAME = "opencv"
+NAME = "mpp"
 
 build_dir, ok_file = GetFilePathOK(NAME)
 scripts_dir = GetScriptsDir(NAME)

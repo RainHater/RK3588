@@ -21,6 +21,8 @@ setenvs = \
         export INSTALL_DIR=${INSTALL_DIR}; \
 		export THREAD_NUM=${THREAD_NUM}; \
 		export THIRD_PARTY_PYTHON_DIR=${THIRD_PARTY_PYTHON_DIR}; \
+		export LD_LIBRARY_PATH=${INSTALL_DIR}/lib:$LD_LIBRARY_PATH; \
+		export PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH; \
     }; \
     set_envs
 
@@ -64,7 +66,27 @@ opencv:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
+.PHONY: mpp
+mpp:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
+
+.PHONY: librga
+librga:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
+
+.PHONY: ffmpeg
+ffmpeg:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
+
+.PHONY: spdlog
 spdlog:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
-	
+
+.PHONY: rknn
+rknn:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py

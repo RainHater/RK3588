@@ -16,3 +16,6 @@
 [submodule "3rdparty/mpp"]
 	path = 3rdparty/mpp
 	url = https://github.com/rockchip-linux/mpp.git
+[submodule "3rdparty/rknn"]
+	path = 3rdparty/rknn
+	url = https://github.com/airockchip/rknn-toolkit2.git

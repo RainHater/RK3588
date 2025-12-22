@@ -47,21 +47,27 @@ def CreateFileOK(path: Path):
 def ExpandVars(text: str) -> str:
     return re.sub(r'\$\{([^}]+)\}', lambda m: os.environ.get(m.group(1), m.group(0)), text)
 
-def LoadFileINI(ini_path: str) -> list:
+def LoadFileINI(ini_path: str, mode: str) -> list:
     config = configparser.ConfigParser()
     config.optionxform = str
     config.read(ini_path)
     cmake_args = []
 
-    for key, val in config["cmake"].items():
-        text = ExpandVars(f"-D{key}={val}")
+    for key, val in config[mode].items():
+        if mode == 'cmake':
+            text = ExpandVars(f"-D{key}={val}")
+        elif mode == 'configure':
+            if val:
+                text = ExpandVars(f"--{key}={val}")
+            else:
+                text = ExpandVars(f"--{key}")
         cmake_args.append(text)
     return cmake_args
 
 def CMakeConfigure(scripts_dir: str, src_dir: str, build_dir: str):
 
-    ini_path = Path(scripts_dir) / Path('cmake.ini')
-    ini_args = LoadFileINI(str(ini_path))
+    ini_path = Path(scripts_dir) / Path('arg.ini')
+    ini_args = LoadFileINI(str(ini_path), 'cmake')
 
     print(f'CMake 命令参数:')
     for cmd in ini_args:
@@ -76,6 +82,23 @@ def CMakeConfigure(scripts_dir: str, src_dir: str, build_dir: str):
     else:
         print("CMake 配置失败！")
         print("错误码:", result.returncode)
+
+def Configure(scripts_dir: str, src_dir: str, build_dir: str):
+    ini_path = Path(scripts_dir) / Path('arg.ini')
+    ini_args = LoadFileINI(str(ini_path), 'configure')
+
+    cmd = [f'{src_dir}/configure'] + ini_args
+
+    print(f'cmd: {cmd}')
+
+    result = subprocess.run(cmd, cwd=build_dir)
+
+    if result.returncode == 0:
+        print("Configure 配置成功！")
+    else:
+        print("Configure 配置失败！")
+        print("错误码:", result.returncode)
+
 
 def MakeBuild(build_dir: str):
     result = subprocess.run(f"make -j{THREAD_NUM}", cwd = build_dir, shell=True)
@@ -95,14 +118,22 @@ def MakeInstall(build_dir: str):
         print("Make 安装失败！")
         print("错误码:", result.returncode)
 
-def CopyFolder(src: Path, dec: Path):
-    dec.mkdir(parents=True, exist_ok=True)
+def CopyFolder(src: Path, dst: Path, patterns=None):
+    if not src.exists():
+        print(f"警告：源目录 {src} 不存在，跳过复制")
+        return
+
+    dst.mkdir(parents=True, exist_ok=True)
 
     for item in src.iterdir():
-        target = dec / item.name
-        if item.is_dir():
-            shutil.copytree(item, target, dirs_exist_ok=True)
-        else:
-            shutil.copy2(item, target)
+        target = dst / item.name
 
-    print(f'{src} 复制到 {dec}')
+        if item.is_dir():
+            # 递归复制子目录
+            CopyFolder(item, target, patterns)
+        else:
+            # 如果指定 patterns，只复制匹配文件
+            if patterns is None or any(item.match(p) for p in patterns):
+                shutil.copy2(item, target)
+
+    print(f'{src} 复制到 {dst}')
