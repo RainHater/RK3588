@@ -22,7 +22,7 @@
 ## 项目的环境构建
 1. 安装的依赖
 ```bash
-sudo apt install libdrm-dev
+sudo apt install libdrm-dev libopencv-dev v4l-utils -y
 ```
 
 2. 下载子仓库
@@ -30,7 +30,7 @@ sudo apt install libdrm-dev
 git submodule update --init --recursive --depth 1
 ```
 
-## ⚙️ 构建与运行
+## 构建与运行
 
 ### 使用 Makefile
 

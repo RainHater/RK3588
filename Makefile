@@ -35,7 +35,7 @@ all: configure build
 configure:
 	@echo "==> Configuring project $(PROJECT_NAME)..."
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake $(CMAKE_FLAGS) -DPROJECT_NAME=$(PROJECT_NAME) ..
+	@cd $(BUILD_DIR) && cmake $(CMAKE_FLAGS) -DCMAKE_PROJECT_NAME=$(PROJECT_NAME) ..
 
 # === 编译阶段 ===
 .PHONY: build
@@ -88,5 +88,10 @@ spdlog:
 
 .PHONY: rknn
 rknn:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
+
+.PHONY: json
+json:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py

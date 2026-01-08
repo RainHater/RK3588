@@ -19,3 +19,6 @@
 [submodule "3rdparty/rknn"]
 	path = 3rdparty/rknn
 	url = https://github.com/airockchip/rknn-toolkit2.git
+[submodule "3rdparty/json"]
+	path = 3rdparty/json
+	url = git@github.com:nlohmann/json.git

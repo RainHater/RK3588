@@ -1,7 +1,6 @@
-add_subdirectory(utils)
-add_subdirectory(camera)
-add_subdirectory(vision)
-add_subdirectory(core)
+file(GLOB_RECURSE FIND_FILE
+    ${CMAKE_CURRENT_LIST_DIR}/*.cpp
+)
 
 set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE 
     ${CMAKE_CURRENT_LIST_DIR}
@@ -9,5 +8,6 @@ set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE
 
 set_property(
     GLOBAL APPEND PROPERTY ALL_SOURCES 
-    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
+    ${FIND_FILE}
 )
+

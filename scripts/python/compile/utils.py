@@ -72,16 +72,17 @@ def CMakeConfigure(scripts_dir: str, src_dir: str, build_dir: str):
     print(f'CMake 命令参数:')
     for cmd in ini_args:
         print(cmd)
-
+    print(f'src_dir: {src_dir}')
+    print(f'build_dir: {build_dir}')
     cmake_cmd = ["cmake"] + ini_args + [str(build_dir)] + [str(src_dir)]
-    
-    result = subprocess.run(cmake_cmd, cwd=src_dir)
+    result = subprocess.run(cmake_cmd, cwd=build_dir)
 
     if result.returncode == 0:
         print("CMake 配置成功！")
     else:
         print("CMake 配置失败！")
-        print("错误码:", result.returncode)
+    
+    return result.returncode
 
 def Configure(scripts_dir: str, src_dir: str, build_dir: str):
     ini_path = Path(scripts_dir) / Path('arg.ini')
@@ -129,11 +130,26 @@ def CopyFolder(src: Path, dst: Path, patterns=None):
         target = dst / item.name
 
         if item.is_dir():
-            # 递归复制子目录
             CopyFolder(item, target, patterns)
         else:
-            # 如果指定 patterns，只复制匹配文件
             if patterns is None or any(item.match(p) for p in patterns):
                 shutil.copy2(item, target)
 
+    print(f'{src} 复制到 {dst}')
+
+def CopyFile(src: Path, dst: Path):
+    if not src.exists():
+        print(f"警告：源文件 {src} 不存在，跳过复制")
+        return
+
+    if src.is_dir():
+        print(f"警告：{src} 是目录，不能用 CopyFile")
+        return
+
+    if dst.exists() and dst.is_dir():
+        dst = dst / src.name
+    else:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+
+    shutil.copy2(src, dst)
     print(f'{src} 复制到 {dst}')
