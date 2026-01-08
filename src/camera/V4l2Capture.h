@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "Logger.h"
+
 class V4L2Capture{
 public:
     V4L2Capture(const std::string& device_name);
@@ -18,6 +20,7 @@ public:
     static constexpr int BUFFER_COUNT = 4;
 private:
     std::string m_device_name;
+    std::shared_ptr<spdlog::logger> m_logger;
     int m_fd;
     void* m_buffers[BUFFER_COUNT];
     size_t m_buffer_sizes[BUFFER_COUNT];

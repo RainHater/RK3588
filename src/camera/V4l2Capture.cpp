@@ -11,6 +11,7 @@ V4L2Capture::V4L2Capture(const std::string& deviceName)
     : m_device_name(deviceName)
     , m_fd(-1)
 {
+    m_logger = Logger::get("V4L2Capture");
     for (int i = 0; i < BUFFER_COUNT; ++i) {
         m_buffers[i] = nullptr;
         m_buffer_sizes[i] = 0;
@@ -24,18 +25,18 @@ V4L2Capture::~V4L2Capture(){
 bool V4L2Capture::OpenDevice(){
     m_fd = open(m_device_name.c_str(), O_RDWR);
     if (m_fd < 0) {
-        perror("open");
+        m_logger->error("打开设备失败!");
         return false;
     }
 
     v4l2_capability cap{};
     if (ioctl(m_fd, VIDIOC_QUERYCAP, &cap) < 0) {
-        perror("VIDIOC_QUERYCAP");
+        m_logger->error("VIDIOC_QUERYCAP 失败!");
         return false;
     }
 
     if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        std::cerr << "Not a capture device\n";
+        m_logger->error("不是摄像头设备");
         return false;
     }
 
@@ -47,7 +48,7 @@ bool V4L2Capture::OpenDevice(){
     fmt.fmt.pix.field = V4L2_FIELD_NONE;
 
     if (ioctl(m_fd, VIDIOC_S_FMT, &fmt) < 0) {
-        perror("VIDIOC_S_FMT");
+        m_logger->error("VIDIOC_S_FMT 失败");
         return false;
     }
 
@@ -57,7 +58,7 @@ bool V4L2Capture::OpenDevice(){
     req.memory = V4L2_MEMORY_MMAP;
 
     if (ioctl(m_fd, VIDIOC_REQBUFS, &req) < 0) {
-        perror("VIDIOC_REQBUFS");
+        m_logger->error("VIDIOC_REQBUFS 失败");
         return false;
     }
 
@@ -68,7 +69,7 @@ bool V4L2Capture::OpenDevice(){
         buf.index = i;
 
         if (ioctl(m_fd, VIDIOC_QUERYBUF, &buf) < 0) {
-            perror("VIDIOC_QUERYBUF");
+            m_logger->error("VIDIOC_QUERYBUF 失败");
             return false;
         }
 
@@ -78,7 +79,7 @@ bool V4L2Capture::OpenDevice(){
         m_buffer_sizes[i] = buf.length;
 
         if (m_buffers[i] == MAP_FAILED) {
-            perror("mmap");
+            m_logger->error("mmap 失败");
             return false;
         }
 
@@ -87,7 +88,7 @@ bool V4L2Capture::OpenDevice(){
 
     v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     if (ioctl(m_fd, VIDIOC_STREAMON, &type) < 0) {
-        perror("VIDIOC_STREAMON");
+        m_logger->error("VIDIOC_STREAMON 失败");
         return false;
     }
 
@@ -100,7 +101,7 @@ bool V4L2Capture::CaptureFrame(){
     buf.memory = V4L2_MEMORY_MMAP;
 
     if (ioctl(m_fd, VIDIOC_DQBUF, &buf) < 0) {
-        perror("VIDIOC_DQBUF");
+        m_logger->error("VIDIOC_DQBUF 失败");
         return false;
     }
 
@@ -116,7 +117,7 @@ bool V4L2Capture::CaptureFrame(){
 
     // 关键：用完必须放回去
     if (ioctl(m_fd, VIDIOC_QBUF, &buf) < 0) {
-        perror("VIDIOC_QBUF");
+        m_logger->error("VIDIOC_QBUF 失败");
         return false;
     }
 

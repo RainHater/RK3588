@@ -24,6 +24,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 set(SCRIPTS_PATH "${CMAKE_CURRENT_LIST_DIR}/scripts")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+
 set_property(GLOBAL APPEND PROPERTY ALL_DEFINE "")
 set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE "")
 set_property(GLOBAL APPEND PROPERTY ALL_SOURCES "")
@@ -45,12 +47,15 @@ message("链接库: ${ALL_LIBS}")
 
 add_executable(${PROJECT_NAME} ${ALL_SOURCES})
 
-include_directories(${ALL_INCLUDE})
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    ${ALL_INCLUDE}
+)
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
-
-link_directories(${CMAKE_INSTALL_PREFIX}/lib)
-
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    ${ALL_LIBS}
+)
 
 if (MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)

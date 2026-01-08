@@ -1,6 +1,12 @@
+find_package(spdlog REQUIRED)
+
 set(BASE_LIB
     OpenCL
     pthread
+)
+
+set(SPDLOG_LIB
+    spdlog::spdlog
 )
 
 set(OPENCV_LIB 
@@ -28,6 +34,7 @@ set_property(
     ${BASE_LIB}
     ${OPENCV_LIB}
     ${ROCKCHIP_LIB}
+    ${SPDLOG_LIB}
 )
 
 set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE 
