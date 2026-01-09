@@ -26,7 +26,6 @@ set(OPENCV_LIB
 
 set(ROCKCHIP_LIB
     rknnrt
-    rockchip_mpp
 )
 
 set_property(

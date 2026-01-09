@@ -87,7 +87,7 @@ spdlog:
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
 .PHONY: rknn
-rknn:
+rknpu2:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 

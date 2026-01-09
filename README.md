@@ -1,13 +1,13 @@
 # RK3588 C++ 仓库
 
-一个简洁现代的 **RK3588 C++ 仓库**, 带python 构建编译脚本, 使用 **CMake + Makefile** 构建。
+一个简洁现代的 RK3588 C++ 仓库, 带python 构建编译脚本, 使用 CMake + Makefile 构建。
 适合快速启动中小型 C++ 工程或嵌入式项目。
 
 ---
 
 ## 已完成功能
 
-✅ V4L2 采集摄像头画面
+- ✅ V4L2 采集摄像头画面
 
 ---
 
@@ -28,8 +28,6 @@ git submodule update --init --recursive --depth 1
 
 ## 构建与运行
 
-### 使用 Makefile
-
 ```bash
 #配置 + 编译
 make
@@ -39,4 +37,16 @@ make run
 
 #清理
 make clean
+```
+
+## 注意
+
+1. 当出现 brltty 占用 USB 端口请卸载它
+```bash
+sudo systemctl stop brltty
+sudo systemctl disable brltty
+
+sudo apt-get remove --purge brltty
+
+sudo apt-get autoremove
 ```

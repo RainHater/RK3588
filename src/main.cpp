@@ -5,7 +5,7 @@
 #define DEVICE_NAME "/dev/video1"
 
 int main() {
-    Logger::init("logs");
+    Logger::init("data/logs");
     auto logger = Logger::defaultLogger();
     V4L2Capture capture(DEVICE_NAME);
     if (!capture.OpenDevice()) {

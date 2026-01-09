@@ -13,12 +13,9 @@
 [submodule "3rdparty/librga"]
 	path = 3rdparty/librga
 	url = https://github.com/airockchip/librga.git
-[submodule "3rdparty/mpp"]
-	path = 3rdparty/mpp
-	url = https://github.com/rockchip-linux/mpp.git
-[submodule "3rdparty/rknn"]
-	path = 3rdparty/rknn
-	url = https://github.com/airockchip/rknn-toolkit2.git
 [submodule "3rdparty/json"]
 	path = 3rdparty/json
 	url = git@github.com:nlohmann/json.git
+[submodule "3rdparty/rknpu2"]
+	path = 3rdparty/rknpu2
+	url = https://github.com/rockchip-linux/rknpu2.git
