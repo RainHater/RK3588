@@ -42,6 +42,7 @@ configure:
 build:
 	@echo "==> Building project..."
 	@cd $(BUILD_DIR) && $(MAKE) && patchelf --set-rpath ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/bin/${PROJECT_NAME}
+	cp $(BUILD_DIR)/${PROJECT_NAME} ${INSTALL_DIR}/bin/${PROJECT_NAME}
 	
 
 # === 安装阶段 ===
@@ -61,7 +62,7 @@ clean:
 run: build
 	@echo "==> Running $(PROJECT_NAME)..."
 	export LD_LIBRARY_PATH=$(ROOT_DIR)/target/lib:$LD_LIBRARY_PATH
-	@$(BUILD_DIR)/$(PROJECT_NAME)
+	@$(INSTALL_DIR)/bin/$(PROJECT_NAME)
 
 .PHONY: opencv
 opencv:

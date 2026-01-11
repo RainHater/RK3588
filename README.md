@@ -8,11 +8,12 @@
 ## 已完成功能
 
 - ✅ V4L2 采集摄像头画面
+- ✅ ffmpeg 推流
 
 ---
 
 ## 环境与工具要求
-- 操作系统：Ubuntu 22.04 LTS
+- 操作系统：[Ubuntu 22.04 LTS](https://github.com/Joshua-Riek/ubuntu-rockchip)
 - 开发板：[Rock 5b](https://docs.radxa.com/rock5/rock5b)
 
 ## 项目的环境构建
@@ -28,6 +29,7 @@ git submodule update --init --recursive --depth 1
 
 ## 构建与运行
 
+1. 构建编译
 ```bash
 #配置 + 编译
 make
@@ -39,14 +41,8 @@ make run
 make clean
 ```
 
-## 注意
-
-1. 当出现 brltty 占用 USB 端口请卸载它
+2. FFMPEG 拉流
 ```bash
-sudo systemctl stop brltty
-sudo systemctl disable brltty
-
-sudo apt-get remove --purge brltty
-
-sudo apt-get autoremove
+ffplay -fflags nobuffer -flags low_delay -framedrop -strict experimental rtsp://192.168.10.22:8554/live
 ```
+
