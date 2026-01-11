@@ -2,8 +2,7 @@
 #define _V4L2_CAPTURE_H
 
 #include <iostream>
-
-#include "Logger.h"
+#include "FFmpegStreamer.h"
 
 class V4L2Capture{
 public:
@@ -20,7 +19,7 @@ public:
     static constexpr int BUFFER_COUNT = 4;
 private:
     std::string m_device_name;
-    std::shared_ptr<spdlog::logger> m_logger;
+    FFmpegStreamer m_streamer;
     int m_fd;
     void* m_buffers[BUFFER_COUNT];
     size_t m_buffer_sizes[BUFFER_COUNT];

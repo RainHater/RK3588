@@ -8,7 +8,6 @@ if(NOT DEFINED CMAKE_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_LIST_DIR}/target")
 endif()
 
-
 project(${CMAKE_PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -22,9 +21,10 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
 set(SCRIPTS_PATH "${CMAKE_CURRENT_LIST_DIR}/scripts")
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
+set(CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
 
-link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+link_directories(${CMAKE_INSTALL_RPATH}/lib)
 
 set_property(GLOBAL APPEND PROPERTY ALL_DEFINE "")
 set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE "")
@@ -44,6 +44,7 @@ message("宏定义: ${ALL_DEFINE}")
 message("头文件: ${ALL_INCLUDE}")
 message("源文件: ${ALL_SOURCES}")
 message("链接库: ${ALL_LIBS}")
+message("安装路径: ${CMAKE_INSTALL_PREFIX}")
 
 add_executable(${PROJECT_NAME} ${ALL_SOURCES})
 
@@ -57,8 +58,13 @@ target_link_libraries(${PROJECT_NAME}
     ${ALL_LIBS}
 )
 
-if (MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
-else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+target_compile_options(${PROJECT_NAME} 
+    PRIVATE 
+    -Wall 
+    -Wextra 
+    -Wpedantic
+)
+
+INSTALL(TARGETS ${PROJECT_NAME} 
+    DESTINATION bin
+)

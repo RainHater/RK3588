@@ -15,14 +15,14 @@ THREAD_NUM := 14
 .ONESHELL:
 setenvs = \
     set_envs() { \
-        export ROOT_DIR=${ROOT_DIR}; \
+        export ROOT_DIR=${ROOT_DIR} \
 		export BUILD_DIR=${BUILD_DIR}; \
         export THIRD_PARTY_DIR=${THIRD_PARTY_DIR}; \
         export INSTALL_DIR=${INSTALL_DIR}; \
 		export THREAD_NUM=${THREAD_NUM}; \
 		export THIRD_PARTY_PYTHON_DIR=${THIRD_PARTY_PYTHON_DIR}; \
-		export LD_LIBRARY_PATH=${INSTALL_DIR}/lib:$LD_LIBRARY_PATH; \
-		export PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH; \
+		export LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu:${INSTALL_DIR}/target/lib; \
+		export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:${INSTALL_DIR}/lib/pkgconfig; \
     }; \
     set_envs
 
@@ -35,19 +35,20 @@ all: configure build
 configure:
 	@echo "==> Configuring project $(PROJECT_NAME)..."
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake $(CMAKE_FLAGS) -DCMAKE_PROJECT_NAME=$(PROJECT_NAME) ..
+	@cd $(BUILD_DIR) && cmake $(CMAKE_FLAGS) -DCMAKE_PROJECT_NAME=$(PROJECT_NAME) -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
 
 # === 编译阶段 ===
 .PHONY: build
 build:
 	@echo "==> Building project..."
-	@cd $(BUILD_DIR) && $(MAKE)
+	@cd $(BUILD_DIR) && $(MAKE) && patchelf --set-rpath ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/bin/${PROJECT_NAME}
+	
 
 # === 安装阶段 ===
 .PHONY: install
 install:
 	@echo "==> Installing to $(INSTALL_DIR)..."
-	@cd $(BUILD_DIR) && $(MAKE) install DESTDIR=$(abspath $(INSTALL_DIR))
+	@cd $(BUILD_DIR) && $(MAKE) install
 
 # === 清理构建文件 ===
 .PHONY: clean
@@ -59,6 +60,7 @@ clean:
 .PHONY: run
 run: build
 	@echo "==> Running $(PROJECT_NAME)..."
+	export LD_LIBRARY_PATH=$(ROOT_DIR)/target/lib:$LD_LIBRARY_PATH
 	@$(BUILD_DIR)/$(PROJECT_NAME)
 
 .PHONY: opencv
@@ -71,13 +73,13 @@ mpp:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
-.PHONY: librga
-librga:
+.PHONY: rga
+rga:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
-.PHONY: ffmpeg
-ffmpeg:
+.PHONY: ffmpeg-rockchip
+ffmpeg-rockchip:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
 
@@ -93,5 +95,10 @@ rknpu2:
 
 .PHONY: json
 json:
+	$(setenvs)
+	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py
+
+.PHONY: mpp
+mpp:
 	$(setenvs)
 	python3 ${THIRD_PARTY_PYTHON_DIR}/$@/run.py

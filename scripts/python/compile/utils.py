@@ -44,36 +44,34 @@ def CreateFileOK(path: Path):
     path.touch()
     print(f'已经创建文件: {path}')
 
-def ExpandVars(text: str) -> str:
-    return re.sub(r'\$\{([^}]+)\}', lambda m: os.environ.get(m.group(1), m.group(0)), text)
+def FindPlaceholders(s):
+    pattern = r'\${(.*?)}'
+    
+    def repl(match):
+        var_name = match.group(1)
+        return os.environ.get(var_name, match.group(0))
 
-def LoadFileINI(ini_path: str, mode: str) -> list:
-    config = configparser.ConfigParser()
-    config.optionxform = str
-    config.read(ini_path)
-    cmake_args = []
+    return re.sub(pattern, repl, s)
 
-    for key, val in config[mode].items():
-        if mode == 'cmake':
-            text = ExpandVars(f"-D{key}={val}")
-        elif mode == 'configure':
-            if val:
-                text = ExpandVars(f"--{key}={val}")
-            else:
-                text = ExpandVars(f"--{key}")
-        cmake_args.append(text)
-    return cmake_args
+def LoadFileEnvINI(ini_path: str):
+    ini_args = []
+    print('参数配置')
+    with open(ini_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            line = FindPlaceholders(line)
+            ini_args.append(line)
+            print(line)
+    return ini_args
 
 def CMakeConfigure(scripts_dir: str, src_dir: str, build_dir: str):
-
     ini_path = Path(scripts_dir) / Path('arg.ini')
-    ini_args = LoadFileINI(str(ini_path), 'cmake')
+    # ini_args = LoadFileINI(str(ini_path), 'cmake')
+    ini_args = LoadFileEnvINI(ini_path)
 
-    print(f'CMake 命令参数:')
-    for cmd in ini_args:
-        print(cmd)
     print(f'src_dir: {src_dir}')
     print(f'build_dir: {build_dir}')
+
     cmake_cmd = ["cmake"] + ini_args + [str(build_dir)] + [str(src_dir)]
     result = subprocess.run(cmake_cmd, cwd=build_dir)
 
@@ -86,19 +84,20 @@ def CMakeConfigure(scripts_dir: str, src_dir: str, build_dir: str):
 
 def Configure(scripts_dir: str, src_dir: str, build_dir: str):
     ini_path = Path(scripts_dir) / Path('arg.ini')
-    ini_args = LoadFileINI(str(ini_path), 'configure')
 
+    ini_args = LoadFileEnvINI(ini_path)
+
+    env = os.environ.copy()
     cmd = [f'{src_dir}/configure'] + ini_args
 
-    print(f'cmd: {cmd}')
-
-    result = subprocess.run(cmd, cwd=build_dir)
+    result = subprocess.run(cmd, cwd=build_dir, env=env)
 
     if result.returncode == 0:
         print("Configure 配置成功！")
     else:
         print("Configure 配置失败！")
         print("错误码:", result.returncode)
+    return result.returncode
 
 
 def MakeBuild(build_dir: str):

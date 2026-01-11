@@ -11,6 +11,7 @@ build_dir, ok_file = GetFilePathOK(NAME)
 scripts_dir = GetScriptsDir(NAME)
 src_dir = GetSrcDir(NAME)
 res = FindFileOK(build_dir, ok_file)
+
 if not res:
     print('未编译开始编译...')
     CMakeConfigure(scripts_dir, src_dir, build_dir)

@@ -1,4 +1,17 @@
-find_package(spdlog REQUIRED)
+find_package(OpenMP REQUIRED)
+
+if(OpenMP_CXX_FOUND OR OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    add_definitions(-fopenmp)
+    message(STATUS "find OpenMP")
+endif()
+
+find_package(OpenCL REQUIRED)
+if (OpenCL_FOUND)
+    include_directories(${OpenCL_INCLUDE_DIRS})
+    message(STATUS "find OpenCL: ${OpenCL_LIBRARIES}")
+endif()
 
 set(BASE_LIB
     OpenCL
@@ -6,7 +19,7 @@ set(BASE_LIB
 )
 
 set(SPDLOG_LIB
-    spdlog::spdlog
+    
 )
 
 set(OPENCV_LIB 
@@ -24,8 +37,18 @@ set(OPENCV_LIB
     opencv_dnn
 )
 
+set(FFMPEG_LIB
+    avformat
+    avcodec
+    avutil
+    swresample
+    swscale
+)
+
 set(ROCKCHIP_LIB
     rknnrt
+    rockchip_mpp
+    rga
 )
 
 set_property(
@@ -34,6 +57,7 @@ set_property(
     ${OPENCV_LIB}
     ${ROCKCHIP_LIB}
     ${SPDLOG_LIB}
+    ${FFMPEG_LIB}
 )
 
 set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE 

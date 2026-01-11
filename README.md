@@ -18,7 +18,7 @@
 ## 项目的环境构建
 1. 安装的依赖
 ```bash
-sudo apt install libdrm-dev libopencv-dev v4l-utils -y
+sudo apt install libdrm-dev libopencv-dev v4l-utils patchelf -y
 ```
 
 2. 下载子仓库
