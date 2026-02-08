@@ -83,3 +83,8 @@ jpeg_turbo:
 stb_image:
 	$(setenvs)
 	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
+
+.PHONY: fftw
+fftw:
+	$(setenvs)
+	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
