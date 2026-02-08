@@ -7,7 +7,6 @@ from scripts.python.compile.utils import *
 
 NAME = "mpp"
 
-
 build_dir, ok_file = GetFilePathOK(NAME)
 scripts_dir = GetScriptsDir(NAME)
 src_dir = GetSrcDir(NAME)

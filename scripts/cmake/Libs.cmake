@@ -35,6 +35,7 @@ set(OPENCV_LIB
     opencv_face
     opencv_freetype
     opencv_dnn
+    turbojpeg
 )
 
 set(FFMPEG_LIB
@@ -63,4 +64,5 @@ set_property(
 set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE 
     ${CMAKE_INSTALL_PREFIX}/include
     ${CMAKE_INSTALL_PREFIX}/include/opencv4
+    ${CMAKE_INSTALL_PREFIX}/include/rknpu2
 )

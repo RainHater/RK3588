@@ -7,9 +7,6 @@
 [submodule "3rdparty/spdlog"]
 	path = 3rdparty/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "3rdparty/json"]
-	path = 3rdparty/json
-	url = git@github.com:nlohmann/json.git
 [submodule "3rdparty/rknpu2"]
 	path = 3rdparty/rknpu2
 	url = https://github.com/rockchip-linux/rknpu2.git
@@ -22,3 +19,6 @@
 [submodule "3rdparty/rga"]
 	path = 3rdparty/rga
 	url = https://github.com/airockchip/librga.git
+[submodule "3rdparty/json"]
+	path = 3rdparty/json
+	url = git@github.com:nlohmann/json.git

@@ -78,7 +78,7 @@ def CMakeConfigure(scripts_dir: str, src_dir: str, build_dir: str):
     if result.returncode == 0:
         print("CMake 配置成功！")
     else:
-        print("CMake 配置失败！")
+        raise RuntimeError(f"CMake 配置失败，命令返回码 {result.returncode}")
     
     return result.returncode
 
@@ -95,8 +95,7 @@ def Configure(scripts_dir: str, src_dir: str, build_dir: str):
     if result.returncode == 0:
         print("Configure 配置成功！")
     else:
-        print("Configure 配置失败！")
-        print("错误码:", result.returncode)
+        raise RuntimeError(f"Configure 配置失败，命令返回码 {result.returncode}")
     return result.returncode
 
 
@@ -106,8 +105,7 @@ def MakeBuild(build_dir: str):
     if result.returncode == 0:
         print("Make 编译成功！")
     else:
-        print("Make 编译失败！")
-        print("错误码:", result.returncode)
+        raise RuntimeError(f"Make 配置失败，命令返回码 {result.returncode}")
 
 def MakeInstall(build_dir: str):
     result = subprocess.run(["make", "install"], cwd=build_dir)
@@ -115,8 +113,7 @@ def MakeInstall(build_dir: str):
     if result.returncode == 0:
         print("Make 安装成功！")
     else:
-        print("Make 安装失败！")
-        print("错误码:", result.returncode)
+        raise RuntimeError(f"Make 安装失败，命令返回码 {result.returncode}")
 
 def CopyFolder(src: Path, dst: Path, patterns=None):
     if not src.exists():
