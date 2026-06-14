@@ -1,14 +1,14 @@
 # RK3588 C++ 仓库
 
-一个简洁现代的 RK3588 C++ 仓库, 带python 构建编译脚本, 使用 CMake + Makefile 构建。
+一个简洁现代的 RK3588 C++ 仓库, 带Python 构建编译脚本, 使用 CMake + Makefile 构建。
 适合快速启动中小型 C++ 工程或嵌入式项目。
 
 ---
 
 ## 已完成功能
 
-- ✅ V4L2 采集摄像头画面
-- ✅ ffmpeg 推流
+- [x] V4L2 采集摄像头画面
+- [x] ffmpeg 推流
 
 ---
 
@@ -19,7 +19,7 @@
 ## 项目的环境构建
 1. 安装的依赖
 ```bash
-sudo apt install libdrm-dev libopencv-dev v4l-utils patchelf -y
+sudo apt install libdrm-dev libspdlog-dev libopencv-dev v4l-utils patchelf -y
 ```
 
 2. 下载子仓库
@@ -43,6 +43,6 @@ make clean
 
 2. FFMPEG 拉流
 ```bash
-ffplay -fflags nobuffer -flags low_delay -framedrop -strict experimental rtsp://192.168.10.22:8554/live
+ffplay -fflags nobuffer -flags low_delay -framedrop -strict experimental rtsp://<ip>>:8554/live
 ```
 

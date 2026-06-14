@@ -37,7 +37,7 @@ clean:
 run: build
 	@echo "==> Running $(PROJECT_NAME)..."
 	export LD_LIBRARY_PATH=$(ROOT_DIR)/target/lib:$LD_LIBRARY_PATH
-	@$(INSTALL_DIR)/bin/$(PROJECT_NAME)
+	@cd $(INSTALL_DIR)/bin && ./$(PROJECT_NAME)
 
 .PHONY: opencv
 opencv:

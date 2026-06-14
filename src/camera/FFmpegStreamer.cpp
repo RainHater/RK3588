@@ -2,12 +2,19 @@
 
 #include <spdlog/spdlog.h>
 
-FFmpegStreamer::FFmpegStreamer(){
+FFmpegStreamer::FFmpegStreamer(
+    std::string stream_mode,
+    std::string stream_name
+)
+    : m_stream_name(stream_name)
+    , m_stream_mode(stream_mode)
+    , m_logger(LoggerWithTag::GetLogger("FFmpegStreamer_" + m_stream_name))
+{
     m_ffmpeg.param = nullptr;
     m_ffmpeg.fmt_ctx = nullptr;
 }
 
-FFmpegStreamer::~FFmpegStreamer() {
+FFmpegStreamer::~FFmpegStreamer(){
     av_write_trailer(m_ffmpeg.fmt_ctx);
     avcodec_free_context(&m_ffmpeg.enc_ctx);
     av_frame_free(&m_ffmpeg.frame);
@@ -26,7 +33,7 @@ int FFmpegStreamer::Initialize(int width, int height, int fps) {
 
     const AVCodec *codec = avcodec_find_encoder_by_name("h264_rkmpp");
     if (!codec) {
-        spdlog::error("未找到编码器 h264_rkmpp");
+        m_logger->error("未找到编码器 h264_rkmpp");
         return -1;
     }
 
@@ -44,16 +51,17 @@ int FFmpegStreamer::Initialize(int width, int height, int fps) {
     av_dict_set_int(&m_ffmpeg.param, "rc_mode", 0, 0);  // CBR 模式
 
     if (avcodec_open2(m_ffmpeg.enc_ctx, codec, &m_ffmpeg.param) < 0) {
-        spdlog::error("编码器打开失败");
+        m_logger->error("编码器打开失败");
         return -1;
     }
 
     av_dict_free(&m_ffmpeg.param);
 
-    avformat_alloc_output_context2(&m_ffmpeg.fmt_ctx, nullptr, "rtsp", "rtsp://0.0.0.0:8554/live");
+    std::string stream_name = m_stream_mode + "://0.0.0.0:8554/" + m_stream_name;
+    avformat_alloc_output_context2(&m_ffmpeg.fmt_ctx, nullptr, "rtsp", stream_name.c_str());
 
     if (!m_ffmpeg.fmt_ctx) {
-        spdlog::error("RTSP 输出上下文创建失败");
+        m_logger->error("RTSP 输出上下文创建失败");
         return -1;
     }
 
@@ -67,13 +75,13 @@ int FFmpegStreamer::Initialize(int width, int height, int fps) {
 
     if (!(m_ffmpeg.fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         if (avio_open(&m_ffmpeg.fmt_ctx->pb, m_ffmpeg.fmt_ctx->url, AVIO_FLAG_WRITE) < 0) {
-            spdlog::error("无法打开 RTSP 输出 URL");
+            m_logger->error("无法打开 RTSP 输出 URL");
             return -1;
         }
     }
 
     if (avformat_write_header(m_ffmpeg.fmt_ctx, nullptr) < 0) {
-        spdlog::error("写入 RTSP 头部失败");
+        m_logger->error("写入 RTSP 头部失败");
         return -1;
     }
 
@@ -82,7 +90,7 @@ int FFmpegStreamer::Initialize(int width, int height, int fps) {
     m_ffmpeg.frame->width = m_ffmpeg.enc_ctx->width;
     m_ffmpeg.frame->height = m_ffmpeg.enc_ctx->height;
     if (av_frame_get_buffer(m_ffmpeg.frame, 32) < 0) {
-        spdlog::error("frame buffer 分配失败");
+        m_logger->error("frame buffer 分配失败");
         return -1;
     }
 

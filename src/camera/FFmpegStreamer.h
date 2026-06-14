@@ -2,6 +2,7 @@
 #define _FFMPEG_STREAMER_H
 
 #include <iostream>
+#include <string.h>
 #include <opencv2/opencv.hpp>
 
 extern "C" {
@@ -13,13 +14,15 @@ extern "C" {
 #include <libavutil/dict.h>
 }
 
+#include "Logger.h"
+
 #ifndef MPP_ALIGN
 #define MPP_ALIGN(x, a) (((x) + (a) - 1) & ~((a) - 1))
 #endif
 
 class FFmpegStreamer {
 public:
-    FFmpegStreamer();
+    FFmpegStreamer(std::string stream_mode = "rtsp", std::string stream_name = "live");
     ~FFmpegStreamer();
     int Initialize(int width, int height, int fps);
     void EncoderPushStream(cv::Mat frame);
@@ -39,6 +42,9 @@ private:
     };
 private:
     FFmpegInfo m_ffmpeg;
+    std::string m_stream_name;
+    std::string m_stream_mode;
+    std::shared_ptr<LoggerWithTag> m_logger;
 };
 
 #endif

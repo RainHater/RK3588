@@ -1,4 +1,5 @@
 find_package(OpenMP REQUIRED)
+find_package(spdlog REQUIRED)
 
 if(OpenMP_CXX_FOUND OR OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -19,7 +20,7 @@ set(BASE_LIB
 )
 
 set(SPDLOG_LIB
-    
+    spdlog
 )
 
 set(OPENCV_LIB 
