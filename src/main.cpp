@@ -1,16 +1,33 @@
 #include "Logger.h"
 #include "V4l2Capture.h"
+#include "FFmpegStreamer.h"
+#include "ThreadPool.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
+#include <atomic>
+#include <csignal>
+#include <chrono>
+#include <thread>
 
 #define DEVICE_NAME_1 "/dev/video1"
 #define DEVICE_NAME_2 "/dev/video3"
-#define DEVICE_NAME_3 "/dev/video5"
+#define DEVICE_NAME_3 "/dev/video6"
 
-int main() {
+static std::atomic_bool g_running{true};
+
+void SignalHandler(int)
+{
+    g_running = false;
+}
+
+int main()
+{
+    std::signal(SIGINT, SignalHandler);
+    std::signal(SIGTERM, SignalHandler);
+
     auto log = LoggerWithTag::GetLogger("main");
 
     std::vector<std::unique_ptr<V4L2Capture>> capture_v;
@@ -22,26 +39,34 @@ int main() {
         DEVICE_NAME_3
     };
 
-    int camera_len = device_name_v.size();
-
-    std::vector<cv::Mat> img_v(camera_len);
+    const int camera_len = static_cast<int>(device_name_v.size());
 
     capture_v.reserve(camera_len);
     stream_v.reserve(camera_len);
 
+    /*
+     * 先初始化所有摄像头和推流器
+     */
     for (int i = 0; i < camera_len; i++) {
         auto capture = std::make_unique<V4L2Capture>(
-            device_name_v[i], 1280, 720, 30
+            device_name_v[i],
+            1280,
+            720,
+            30
         );
-
-        auto stream = std::make_unique<FFmpegStreamer>(
-            "rtsp", "live" + std::to_string(i)
-        );
-
-        stream->Initialize(1280, 720, 30);
 
         if (!capture->OpenDevice()) {
             log->error("摄像头 {} 打开失败: {}", i, device_name_v[i]);
+            return -1;
+        }
+
+        auto stream = std::make_unique<FFmpegStreamer>(
+            "rtsp",
+            "live" + std::to_string(i)
+        );
+
+        if (stream->Initialize(1280, 720, 30) != 0) {
+            log->error("摄像头 {} 推流器初始化失败", i);
             return -1;
         }
 
@@ -49,18 +74,57 @@ int main() {
         stream_v.push_back(std::move(stream));
     }
 
-    log->info("开始运行...");
+    /*
+     * 三个摄像头，三个线程
+     */
+    ThreadPool pool(camera_len);
+    pool.Start();
 
-    while (true) {
-        for (int i = 0; i < camera_len; i++) {
-            if (!capture_v[i]->CaptureFrame(img_v[i])) {
-                log->warn("摄像头 {} 打开失败: {}", i);
-                continue;
-            }
+    std::vector<std::future<void>> futures;
+    futures.reserve(camera_len);
 
-            stream_v[i]->EncoderPushStream(img_v[i]);
+    for (int i = 0; i < camera_len; i++) {
+        futures.emplace_back(
+            pool.Enqueue([i, &capture_v, &stream_v, log]() {
+                cv::Mat img;
+
+                log->info("摄像头 {} 线程启动", i);
+
+                while (g_running.load()) {
+                    if (!capture_v[i]->CaptureFrame(img)) {
+                        log->warn("摄像头 {} 采集失败", i);
+
+                        std::this_thread::sleep_for(
+                            std::chrono::milliseconds(10)
+                        );
+
+                        continue;
+                    }
+
+                    stream_v[i]->EncoderPushStream(img);
+                }
+
+                log->info("摄像头 {} 线程退出", i);
+            })
+        );
+    }
+
+    log->info("开始运行，按 Ctrl+C 退出...");
+
+    /*
+     * 等待三个摄像头线程退出
+     */
+    for (auto& f : futures) {
+        try {
+            f.get();
+        } catch (const std::exception& e) {
+            log->error("线程异常: {}", e.what());
         }
     }
+
+    pool.Stop();
+
+    log->info("程序退出");
 
     return 0;
 }
