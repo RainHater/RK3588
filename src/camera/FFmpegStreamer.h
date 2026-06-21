@@ -25,7 +25,7 @@ public:
     FFmpegStreamer(std::string stream_mode = "rtsp", std::string stream_name = "live");
     ~FFmpegStreamer();
     int Initialize(int width, int height, int fps);
-    void EncoderPushStream(cv::Mat frame);
+    void EncoderPushStream(const cv::Mat& frame);
 private:
     struct FFmpegInfo{
         AVCodecContext *enc_ctx;

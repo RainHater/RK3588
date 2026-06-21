@@ -100,45 +100,104 @@ int FFmpegStreamer::Initialize(int width, int height, int fps) {
         SWS_BICUBIC, nullptr, nullptr, nullptr
     );
 
+    if (!m_ffmpeg.sws_ctx) {
+        m_logger->error("sws_getContext 创建失败");
+        return -1;
+    }
+
     m_ffmpeg.pkt = av_packet_alloc();
     m_ffmpeg.pts = 0;
 
     return 0;
 }
 
-void FFmpegStreamer::EncoderPushStream(cv::Mat frame){
-    // BGR 转 NV12
-    uint8_t* src_slices[1] = { frame.data };
-    int src_stride[1] = { static_cast<int>(frame.step) };
+void FFmpegStreamer::EncoderPushStream(const cv::Mat& input)
+{
+    if (!m_ffmpeg.sws_ctx || !m_ffmpeg.frame || !m_ffmpeg.enc_ctx) {
+        m_logger->error("FFmpegStreamer 未初始化");
+        return;
+    }
 
-    sws_scale(
-        m_ffmpeg.sws_ctx, 
-        src_slices, 
-        src_stride, 0, 
-        m_ffmpeg.height, 
-        m_ffmpeg.frame->data, 
+    if (input.empty() || input.data == nullptr) {
+        m_logger->warn("输入图像为空，跳过");
+        return;
+    }
+
+    cv::Mat frame;
+
+    // 确保输入是 BGR24，也就是 CV_8UC3
+    if (input.type() == CV_8UC3) {
+        frame = input;
+    } else if (input.type() == CV_8UC1) {
+        cv::cvtColor(input, frame, cv::COLOR_GRAY2BGR);
+    } else if (input.type() == CV_8UC4) {
+        cv::cvtColor(input, frame, cv::COLOR_BGRA2BGR);
+    } else {
+        m_logger->error("不支持的 Mat 类型: {}", input.type());
+        return;
+    }
+
+    // 确保尺寸和编码器尺寸一致
+    if (frame.cols != m_ffmpeg.width || frame.rows != m_ffmpeg.height) {
+        cv::resize(frame, frame, cv::Size(m_ffmpeg.width, m_ffmpeg.height));
+    }
+
+    // 确保数据连续，避免 ROI 或外部 buffer 异常
+    if (!frame.isContinuous()) {
+        frame = frame.clone();
+    }
+
+    if (av_frame_make_writable(m_ffmpeg.frame) < 0) {
+        m_logger->error("frame 不可写");
+        return;
+    }
+
+    const uint8_t* src_slices[4] = {
+        frame.data,
+        nullptr,
+        nullptr,
+        nullptr
+    };
+
+    int src_stride[4] = {
+        static_cast<int>(frame.step[0]),
+        0,
+        0,
+        0
+    };
+
+    int ret = sws_scale(
+        m_ffmpeg.sws_ctx,
+        src_slices,
+        src_stride,
+        0,
+        m_ffmpeg.height,
+        m_ffmpeg.frame->data,
         m_ffmpeg.frame->linesize
-
     );
+
+    if (ret <= 0) {
+        m_logger->error("sws_scale 失败: ret={}", ret);
+        return;
+    }
 
     m_ffmpeg.frame->pts = m_ffmpeg.pts++;
 
-    if (avcodec_send_frame(m_ffmpeg.enc_ctx, m_ffmpeg.frame) < 0) 
+    ret = avcodec_send_frame(m_ffmpeg.enc_ctx, m_ffmpeg.frame);
+    if (ret < 0) {
+        m_logger->error("avcodec_send_frame 失败: {}", ret);
         return;
+    }
 
     while (avcodec_receive_packet(m_ffmpeg.enc_ctx, m_ffmpeg.pkt) == 0) {
         m_ffmpeg.pkt->stream_index = m_ffmpeg.video_st->index;
-        m_ffmpeg.pkt->pts = av_rescale_q(
-            m_ffmpeg.pkt->pts, 
-            m_ffmpeg.enc_ctx->time_base, 
+
+        av_packet_rescale_ts(
+            m_ffmpeg.pkt,
+            m_ffmpeg.enc_ctx->time_base,
             m_ffmpeg.video_st->time_base
         );
-        m_ffmpeg.pkt->dts = m_ffmpeg.pkt->pts;
-        m_ffmpeg.pkt->duration = av_rescale_q(
-            m_ffmpeg.pkt->duration, 
-            m_ffmpeg.enc_ctx->time_base, 
-            m_ffmpeg.video_st->time_base
-        );
+
         av_interleaved_write_frame(m_ffmpeg.fmt_ctx, m_ffmpeg.pkt);
         av_packet_unref(m_ffmpeg.pkt);
     }
