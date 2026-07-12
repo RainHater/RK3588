@@ -1,7 +1,5 @@
 #include "FFmpegStreamer.h"
 
-#include <spdlog/spdlog.h>
-
 FFmpegStreamer::FFmpegStreamer(
     std::string stream_mode,
     std::string stream_name

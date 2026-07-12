@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 if(NOT DEFINED CMAKE_PROJECT_NAME)
-    set(CMAKE_PROJECT_NAME CppTemplate)
+    set(CMAKE_PROJECT_NAME app)
 endif()
 
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -20,42 +20,35 @@ set(CMAKE_SKIP_INSTALL_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
-set(SCRIPTS_PATH "${CMAKE_CURRENT_LIST_DIR}/scripts")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
 
-link_directories(${CMAKE_INSTALL_RPATH}/lib)
+set(SCRIPTS_PATH "${CMAKE_CURRENT_LIST_DIR}/scripts")
+set(APP_LIB_PATH "${CMAKE_INSTALL_RPATH}/lib")
 
-set_property(GLOBAL APPEND PROPERTY ALL_DEFINE "")
-set_property(GLOBAL APPEND PROPERTY ALL_INCLUDE "")
-set_property(GLOBAL APPEND PROPERTY ALL_SOURCES "")
-set_property(GLOBAL APPEND PROPERTY ALL_LIBS "")
+message("APP_LIB_PATH: ${APP_LIB_PATH}")
 
-include(${SCRIPTS_PATH}/cmake/Libs.cmake)
+link_directories(${APP_LIB_PATH})
+list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
 
-add_subdirectory(src)
+include(${SCRIPTS_PATH}/cmake/Dynamic.cmake)
 
-get_property(ALL_INCLUDE GLOBAL PROPERTY ALL_INCLUDE)
-get_property(ALL_DEFINE  GLOBAL PROPERTY ALL_DEFINE)
-get_property(ALL_SOURCES GLOBAL PROPERTY ALL_SOURCES)
-get_property(ALL_LIBS GLOBAL PROPERTY ALL_LIBS)
+add_subdirectory(dynamics/utils)
+add_subdirectory(dynamics/camera)
 
-message("宏定义: ${ALL_DEFINE}")
-message("头文件: ${ALL_INCLUDE}")
-message("源文件: ${ALL_SOURCES}")
-message("链接库: ${ALL_LIBS}")
-message("安装路径: ${CMAKE_INSTALL_PREFIX}")
-
-add_executable(${PROJECT_NAME} ${ALL_SOURCES})
+add_executable(${PROJECT_NAME} 
+    ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
+)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-    ${ALL_INCLUDE}
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    ${ALL_LIBS}
+    common_utils
+    common_camera
 )
 
 target_compile_options(${PROJECT_NAME} 

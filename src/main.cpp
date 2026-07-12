@@ -25,7 +25,7 @@ void SignalHandler(int)
 
 int main()
 {
-    std::signal(SIGINT, SignalHandler);
+    // std::signal(SIGINT, SignalHandler);
     std::signal(SIGTERM, SignalHandler);
 
     auto log = LoggerWithTag::GetLogger("main");
