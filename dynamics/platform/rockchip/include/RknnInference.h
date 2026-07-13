@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "RkTools.h"
 #include "Logger.h"
 
 // 单个模型输出张量

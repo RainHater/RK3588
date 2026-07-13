@@ -32,6 +32,7 @@ link_directories(${APP_LIB_PATH})
 list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
 
 include(${SCRIPTS_PATH}/cmake/Dynamic.cmake)
+include(${SCRIPTS_PATH}/cmake/Tools.cmake)
 
 add_subdirectory(dynamics/utils)
 add_subdirectory(dynamics/camera)
@@ -62,4 +63,10 @@ target_compile_options(${PROJECT_NAME}
 
 INSTALL(TARGETS ${PROJECT_NAME} 
     DESTINATION bin
+)
+
+copy_directories_to_install_path(
+    ${PROJECT_NAME}
+    "${CMAKE_SOURCE_DIR}/config"
+    "${CMAKE_SOURCE_DIR}/models"
 )
