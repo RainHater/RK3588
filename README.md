@@ -9,6 +9,7 @@
 - [x] V4L2 采集摄像头画面
 - [x] ffmpeg 推流
 - [x] 模块化 CMake
+- [x] facenet 推理测试例子
 
 ---
 
