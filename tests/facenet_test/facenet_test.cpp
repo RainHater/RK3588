@@ -1,27 +1,31 @@
+
 #include "Logger.h"
 #include "Tools.h"
 #include "RknnInference.h"
 
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
 
-#include <chrono>
-#include <cmath>
-#include <cstddef>
+#include <iostream>
 #include <string>
 #include <vector>
 
-int main(){
-    auto root_dir = Tools::GetExecutableDirectory();
+int main(int argc, char* argv[])
+{
+    if (argc != 4) {
+        std::cerr
+            << "用法: "
+            << argv[0]
+            << " <model> <image1> <image2>\n";
+
+        return 1;
+    }
+
+    const std::string model_path = argv[1];
+    const std::string image1_path = argv[2];
+    const std::string image2_path = argv[3];
+    
     auto logger = LoggerWithTag::GetLogger("main");
-
     RknnInference inference;
-    std::vector<std::string> image_path_v;
-    std::string model_path = (root_dir / "models" / "facenet-float.rknn").string();
-    std::string image1_path = (root_dir / "tests" / "datasets" / "1_001.jpg").string();
-    std::string image2_path = (root_dir / "tests" / "datasets" / "1_002.jpg").string();
-
-    logger->info("运行路径: {}", root_dir.string());
 
     if (!inference.Initialize(model_path)) {
         logger->error("初始化FaceNet模型失败: {}", model_path);

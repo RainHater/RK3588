@@ -1,4 +1,4 @@
-add_dynamic_static_module(platform_inference
+add_dynamic_static_module(rockchip_inference
     EXCLUDE_SOURCES
     INCLUDES
         ${CMAKE_CURRENT_LIST_DIR}/include

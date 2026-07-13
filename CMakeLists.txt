@@ -51,7 +51,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     common_utils
     common_camera
-    platform_inference
+    rockchip_inference
 )
 
 target_compile_options(${PROJECT_NAME} 
@@ -69,4 +69,10 @@ copy_directories_to_install_path(
     ${PROJECT_NAME}
     "${CMAKE_SOURCE_DIR}/config"
     "${CMAKE_SOURCE_DIR}/models"
+    "${CMAKE_SOURCE_DIR}/tests"
 )
+
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(tests/facenet_test)
+endif()

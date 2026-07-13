@@ -33,6 +33,37 @@ clean:
 	@echo "==> Cleaning build directory..."
 	@rm -rf $(BUILD_DIR) $(INSTALL_DIR)
 
+.PHONY: test
+test: test-configure test-build test-run
+
+.PHONY: test-configure
+test-configure:
+	@echo "==> Configuring tests..."
+	@cmake \
+		-S $(ROOT_DIR) \
+		-B $(BUILD_DIR) \
+		$(CMAKE_FLAGS) \
+		-DCMAKE_PROJECT_NAME=$(PROJECT_NAME) \
+		-DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) \
+		-DBUILD_TESTING=ON
+
+
+.PHONY: test-build
+test-build: test-configure
+	@echo "==> Building facenet_test..."
+	@cmake --build $(BUILD_DIR) \
+		--target facenet_test \
+		-j$(THREAD_NUM)
+
+.PHONY: test-run
+test-run: test-build
+	@echo "==> Running facenet tests..."
+	@LD_LIBRARY_PATH=$(INSTALL_DIR)/lib:$$LD_LIBRARY_PATH \
+		ctest \
+			--test-dir $(BUILD_DIR) \
+			-R facenet_inference_test \
+			--output-on-failure
+
 .PHONY: run
 run: build
 	@echo "==> Running $(PROJECT_NAME)..."
