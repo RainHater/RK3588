@@ -35,6 +35,7 @@ include(${SCRIPTS_PATH}/cmake/Dynamic.cmake)
 
 add_subdirectory(dynamics/utils)
 add_subdirectory(dynamics/camera)
+add_subdirectory(dynamics/platform/rockchip)
 
 add_executable(${PROJECT_NAME} 
     ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
@@ -49,6 +50,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     common_utils
     common_camera
+    platform_inference
 )
 
 target_compile_options(${PROJECT_NAME} 

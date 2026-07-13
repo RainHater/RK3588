@@ -1,130 +1,161 @@
 #include "Logger.h"
-#include "V4l2Capture.h"
-#include "FFmpegStreamer.h"
-#include "ThreadPool.h"
+#include "RknnInference.h"
 
-#include <iostream>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+
+#include <chrono>
+#include <cmath>
+#include <cstddef>
 #include <string>
 #include <vector>
-#include <memory>
-#include <atomic>
-#include <csignal>
-#include <chrono>
-#include <thread>
 
-#define DEVICE_NAME_1 "/dev/video1"
-#define DEVICE_NAME_2 "/dev/video3"
-#define DEVICE_NAME_3 "/dev/video6"
+namespace {
 
-static std::atomic_bool g_running{true};
+constexpr const char* kDefaultModelPath =
+    "/home/rainhater/UserData/Projects/Cpp/Base/RK3588/"
+    "models/facenet-float.rknn";
 
-void SignalHandler(int)
+constexpr const char* kDefaultImagePath =
+    "/home/rainhater/UserData/Projects/Cpp/Base/RK3588/"
+    "test/datasets/1_001.jpg";
+
+bool GetInputSize(const rknn_tensor_attr& attr, int& width, int& height,
+                  int& channels)
 {
-    g_running = false;
+    if (attr.n_dims != 4) {
+        return false;
+    }
+
+    if (attr.fmt == RKNN_TENSOR_NHWC) {
+        height = static_cast<int>(attr.dims[1]);
+        width = static_cast<int>(attr.dims[2]);
+        channels = static_cast<int>(attr.dims[3]);
+        return true;
+    }
+
+    if (attr.fmt == RKNN_TENSOR_NCHW) {
+        channels = static_cast<int>(attr.dims[1]);
+        height = static_cast<int>(attr.dims[2]);
+        width = static_cast<int>(attr.dims[3]);
+        return true;
+    }
+
+    return false;
 }
 
-int main()
+cv::Mat PrepareFaceImage(const cv::Mat& bgr_image, int width, int height)
 {
-    // std::signal(SIGINT, SignalHandler);
-    std::signal(SIGTERM, SignalHandler);
+    cv::Mat rgb_image;
+    cv::cvtColor(bgr_image, rgb_image, cv::COLOR_BGR2RGB);
 
-    auto log = LoggerWithTag::GetLogger("main");
+    cv::Mat resized_image;
+    cv::resize(rgb_image, resized_image, cv::Size(width, height), 0.0, 0.0,
+               cv::INTER_LINEAR);
 
-    std::vector<std::unique_ptr<V4L2Capture>> capture_v;
-    std::vector<std::unique_ptr<FFmpegStreamer>> stream_v;
+    return resized_image.isContinuous() ? resized_image
+                                        : resized_image.clone();
+}
 
-    std::vector<std::string> device_name_v = {
-        DEVICE_NAME_1,
-        DEVICE_NAME_2,
-        DEVICE_NAME_3
-    };
-
-    const int camera_len = static_cast<int>(device_name_v.size());
-
-    capture_v.reserve(camera_len);
-    stream_v.reserve(camera_len);
-
-    /*
-     * 先初始化所有摄像头和推流器
-     */
-    for (int i = 0; i < camera_len; i++) {
-        auto capture = std::make_unique<V4L2Capture>(
-            device_name_v[i],
-            1280,
-            720,
-            30
-        );
-
-        if (!capture->OpenDevice()) {
-            log->error("摄像头 {} 打开失败: {}", i, device_name_v[i]);
-            return -1;
-        }
-
-        auto stream = std::make_unique<FFmpegStreamer>(
-            "rtsp",
-            "live" + std::to_string(i)
-        );
-
-        if (stream->Initialize(1280, 720, 30) != 0) {
-            log->error("摄像头 {} 推流器初始化失败", i);
-            return -1;
-        }
-
-        capture_v.push_back(std::move(capture));
-        stream_v.push_back(std::move(stream));
+void NormalizeFeature(std::vector<float>& feature)
+{
+    float square_sum = 0.0F;
+    for (const float value : feature) {
+        square_sum += value * value;
     }
 
-    /*
-     * 三个摄像头，三个线程
-     */
-    ThreadPool pool(camera_len);
-    pool.Start();
-
-    std::vector<std::future<void>> futures;
-    futures.reserve(camera_len);
-
-    for (int i = 0; i < camera_len; i++) {
-        futures.emplace_back(
-            pool.Enqueue([i, &capture_v, &stream_v, log]() {
-                cv::Mat img;
-
-                log->info("摄像头 {} 线程启动", i);
-
-                while (g_running.load()) {
-                    if (!capture_v[i]->CaptureFrame(img)) {
-                        log->warn("摄像头 {} 采集失败", i);
-
-                        std::this_thread::sleep_for(
-                            std::chrono::milliseconds(10)
-                        );
-
-                        continue;
-                    }
-
-                    stream_v[i]->EncoderPushStream(img);
-                }
-
-                log->info("摄像头 {} 线程退出", i);
-            })
-        );
+    const float norm = std::sqrt(square_sum);
+    if (norm <= 1e-6F) {
+        return;
     }
 
-    log->info("开始运行，按 Ctrl+C 退出...");
+    for (float& value : feature) {
+        value /= norm;
+    }
+}
 
-    /*
-     * 等待三个摄像头线程退出
-     */
-    for (auto& f : futures) {
-        try {
-            f.get();
-        } catch (const std::exception& e) {
-            log->error("线程异常: {}", e.what());
-        }
+}  // namespace
+
+int main(int argc, char* argv[])
+{
+    auto logger = LoggerWithTag::GetLogger("main");
+
+    const std::string model_path = argc > 1 ? argv[1] : kDefaultModelPath;
+    const std::string image_path = argc > 2 ? argv[2] : kDefaultImagePath;
+
+    RknnInference inference;
+    if (!inference.Initialize(model_path)) {
+        logger->error("初始化FaceNet模型失败: {}", model_path);
+        return 1;
     }
 
-    pool.Stop();
+    const rknn_tensor_attr& input_attr = inference.GetInputAttr();
+    int input_width = 0;
+    int input_height = 0;
+    int input_channels = 0;
 
-    log->info("程序退出");
+    if (!GetInputSize(input_attr, input_width, input_height, input_channels)) {
+        logger->error("不支持的模型输入格式, n_dims={}, fmt={}",
+                      input_attr.n_dims, static_cast<int>(input_attr.fmt));
+        return 1;
+    }
+
+    if (input_channels != 3) {
+        logger->error("FaceNet输入通道数应为3, 当前为{}", input_channels);
+        return 1;
+    }
+
+    cv::Mat bgr_image = cv::imread(image_path, cv::IMREAD_COLOR);
+    if (bgr_image.empty()) {
+        logger->error("读取人脸图片失败: {}", image_path);
+        return 1;
+    }
+
+    cv::Mat input_image =
+        PrepareFaceImage(bgr_image, input_width, input_height);
+
+    std::vector<RknnOutput> outputs;
+    const auto begin = std::chrono::steady_clock::now();
+
+    const bool success = inference.Infer(
+        outputs,
+        input_image.data,
+        input_image.total() * input_image.elemSize(),
+        RKNN_TENSOR_UINT8,
+        RKNN_TENSOR_NHWC,
+        false);
+
+    const auto end = std::chrono::steady_clock::now();
+
+    if (!success) {
+        logger->error("FaceNet推理失败");
+        return 1;
+    }
+
+    if (outputs.empty()) {
+        logger->error("FaceNet没有返回输出");
+        return 1;
+    }
+
+    std::vector<float>& feature = outputs[0].data;
+    if (feature.size() != 128) {
+        logger->error("FaceNet输出维度错误, 期望128, 实际{}", feature.size());
+        return 1;
+    }
+
+    NormalizeFeature(feature);
+
+    const double elapsed_ms =
+        std::chrono::duration<double, std::milli>(end - begin).count();
+
+    logger->info("模型输入尺寸: {}x{}x{}", input_width, input_height,
+                 input_channels);
+    logger->info("人脸特征维度: {}", feature.size());
+    logger->info("单次推理耗时: {} ms", elapsed_ms);
+
+    for (std::size_t i = 0; i < feature.size(); ++i) {
+        logger->info("feature[{}] = {}", i, feature[i]);
+    }
 
     return 0;
 }
