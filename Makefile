@@ -62,7 +62,7 @@ test-run: test-build
 		ctest \
 			--test-dir $(BUILD_DIR) \
 			-R facenet_inference_test \
-			--output-on-failure
+			-V
 
 .PHONY: run
 run: build

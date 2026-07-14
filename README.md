@@ -46,4 +46,3 @@ make clean
 ```bash
 ffplay -fflags nobuffer -flags low_delay -framedrop -strict experimental rtsp://<ip>>:8554/live
 ```
-

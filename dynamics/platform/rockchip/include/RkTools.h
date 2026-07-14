@@ -6,14 +6,6 @@
 #include <opencv2/imgproc.hpp>
 
 namespace RkTools {
-// 获取模型尺寸
-bool GetInputSize(
-    const rknn_tensor_attr& attr,
-    int& width, 
-    int& height,
-    int& channels
-);
-
 // 图片预处理
 cv::Mat PrepareFaceImage(const cv::Mat& bgr_image, int width, int height);
 

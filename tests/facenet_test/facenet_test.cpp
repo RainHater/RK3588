@@ -9,8 +9,35 @@
 #include <string>
 #include <vector>
 
-int main(int argc, char* argv[])
+bool GetInputSize(
+    const rknn_tensor_attr& attr,
+    int& width, 
+    int& height,
+    int& channels
+)
 {
+    if (attr.n_dims != 4) {
+        return false;
+    }
+
+    if (attr.fmt == RKNN_TENSOR_NHWC) {
+        height = static_cast<int>(attr.dims[1]);
+        width = static_cast<int>(attr.dims[2]);
+        channels = static_cast<int>(attr.dims[3]);
+        return true;
+    }
+
+    if (attr.fmt == RKNN_TENSOR_NCHW) {
+        channels = static_cast<int>(attr.dims[1]);
+        height = static_cast<int>(attr.dims[2]);
+        width = static_cast<int>(attr.dims[3]);
+        return true;
+    }
+
+    return false;
+}
+
+int main(int argc, char* argv[]){
     if (argc != 4) {
         std::cerr
             << "用法: "
@@ -37,7 +64,7 @@ int main(int argc, char* argv[])
     int input_height = 0;
     int input_channels = 0;
 
-    if (!RkTools::GetInputSize(input_attr, input_width, input_height, input_channels)) {
+    if (!GetInputSize(input_attr, input_width, input_height, input_channels)) {
         logger->error("不支持的模型输入格式, n_dims={}, fmt={}",
                       input_attr.n_dims, static_cast<int>(input_attr.fmt));
         return 1;

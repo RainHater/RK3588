@@ -1,35 +1,6 @@
 #include "RkTools.h"
 
 namespace RkTools {
-bool GetInputSize(
-    const rknn_tensor_attr& attr,
-    int& width, 
-    int& height,
-    int& channels
-)
-{
-    if (attr.n_dims != 4) {
-        return false;
-    }
-
-    if (attr.fmt == RKNN_TENSOR_NHWC) {
-        height = static_cast<int>(attr.dims[1]);
-        width = static_cast<int>(attr.dims[2]);
-        channels = static_cast<int>(attr.dims[3]);
-        return true;
-    }
-
-    if (attr.fmt == RKNN_TENSOR_NCHW) {
-        channels = static_cast<int>(attr.dims[1]);
-        height = static_cast<int>(attr.dims[2]);
-        width = static_cast<int>(attr.dims[3]);
-        return true;
-    }
-
-    return false;
-}
-
-
 cv::Mat PrepareFaceImage(const cv::Mat& bgr_image, int width, int height){
     cv::Mat rgb_image;
     cv::cvtColor(bgr_image, rgb_image, cv::COLOR_BGR2RGB);
