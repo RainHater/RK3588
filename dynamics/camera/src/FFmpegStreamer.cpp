@@ -1,11 +1,13 @@
 #include "FFmpegStreamer.h"
 
 FFmpegStreamer::FFmpegStreamer(
+    std::string encoder_name,
     std::string stream_mode,
     std::string stream_name
 )
     : m_stream_name(stream_name)
     , m_stream_mode(stream_mode)
+    , m_encoder_name(encoder_name)
     , m_logger(LoggerWithTag::GetLogger("FFmpegStreamer_" + m_stream_name))
 {
     m_ffmpeg.param = nullptr;
@@ -29,9 +31,9 @@ int FFmpegStreamer::Initialize(int width, int height, int fps) {
     m_ffmpeg.height = height;
     m_ffmpeg.fps = fps;
 
-    const AVCodec *codec = avcodec_find_encoder_by_name("h264_rkmpp");
+    const AVCodec *codec = avcodec_find_encoder_by_name(m_encoder_name.c_str());
     if (!codec) {
-        m_logger->error("未找到编码器 h264_rkmpp");
+        m_logger->error("未找到编码器 {}", m_encoder_name);
         return -1;
     }
 

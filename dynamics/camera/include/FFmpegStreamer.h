@@ -22,7 +22,7 @@ extern "C" {
 
 class FFmpegStreamer {
 public:
-    FFmpegStreamer(std::string stream_mode = "rtsp", std::string stream_name = "live");
+    FFmpegStreamer(std::string encoder_name = "h264_rkmpp", std::string stream_mode = "rtsp", std::string stream_name = "live");
     ~FFmpegStreamer();
     int Initialize(int width, int height, int fps);
     void EncoderPushStream(const cv::Mat& frame);
@@ -44,6 +44,7 @@ private:
     FFmpegInfo m_ffmpeg;
     std::string m_stream_name;
     std::string m_stream_mode;
+    std::string m_encoder_name;
     std::shared_ptr<LoggerWithTag> m_logger;
 };
 
