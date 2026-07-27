@@ -19,8 +19,9 @@ configure:
 .PHONY: build
 build:
 	@echo "==> Building project..."
-	@cd $(BUILD_DIR) && $(MAKE) && patchelf --set-rpath $(INSTALL_DIR)/lib/ $(INSTALL_DIR)/bin/$(PROJECT_NAME) && \
+	@cd $(BUILD_DIR) && $(MAKE) &&  \
 		cp $(BUILD_DIR)/$(PROJECT_NAME) $(INSTALL_DIR)/bin/$(PROJECT_NAME) && \
+		patchelf --set-rpath $(INSTALL_DIR)/lib/ $(INSTALL_DIR)/bin/$(PROJECT_NAME) && \
 		echo "==> Building finish!"
 	
 .PHONY: install

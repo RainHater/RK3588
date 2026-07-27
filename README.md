@@ -20,7 +20,7 @@
 ## 项目的环境构建
 1. 安装的依赖
 ```bash
-sudo apt install libdrm-dev libspdlog-dev libopencv-dev v4l-utils patchelf -y
+sudo apt install -y libdrm-dev libspdlog-dev libopencv-dev v4l-utils patchelf make cmake build-essential cmake ninja-build pkg-config libv4l-dev
 ```
 
 2. 下载子仓库
