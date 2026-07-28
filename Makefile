@@ -71,6 +71,11 @@ run: build
 	export LD_LIBRARY_PATH=$(ROOT_DIR)/target/lib:$LD_LIBRARY_PATH
 	@cd $(INSTALL_DIR)/bin && ./$(PROJECT_NAME)
 
+.PHONY: package
+package:
+	$(setenvs)
+	python3 $(SCRIPTS_DIR)/python/package_ota.py
+
 .PHONY: opencv
 opencv:
 	$(setenvs)

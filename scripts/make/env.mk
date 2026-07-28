@@ -1,5 +1,6 @@
 #项目信息
 PROJECT_NAME = app
+VERSION = 1.0.0
 
 ROOT_DIR = $(PWD)
 BUILD_DIR = $(ROOT_DIR)/build
@@ -9,7 +10,7 @@ SCRIPTS_DIR = $(ROOT_DIR)/scripts
 THIRD_PARTY_PYTHON_DIR = $(SCRIPTS_DIR)/python/3rdparty
 
 #编译选项
-CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=Debug
+CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=Debug -DAPP_VERSION=$(VERSION)
 THREAD_NUM := 14
 
 .ONESHELL:
@@ -25,4 +26,3 @@ setenvs = \
 		export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:$(INSTALL_DIR)/lib/pkgconfig; \
     }; \
     set_envs
-
