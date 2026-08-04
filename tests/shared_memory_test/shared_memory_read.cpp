@@ -25,10 +25,9 @@ int main(){
         if (!share_memory.ReadWait()){
             continue;
         }
-        auto message_timestamp_us = share_memory.GetMessageTimestampUs();
-        auto end_time = share_memory.GetTimestampUs() - message_timestamp_us;
+        auto end_time = share_memory.GetTimestampUs() - share_memory.GetMessageTimestampUs();
         sequence = data->sequence;
-        log->info("耗时: {} us-> sequence: {}, value: {}, message_timestamp_us: {}", end_time, data->sequence, data->value, message_timestamp_us);
+        log->info("耗时: {} us-> sequence: {}, value: {}", end_time, data->sequence, data->value);
     }
 
     share_memory.Close();

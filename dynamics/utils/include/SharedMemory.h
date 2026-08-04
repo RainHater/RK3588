@@ -30,9 +30,6 @@ public:
     , m_fd(-1)
     , m_address(nullptr)
     , m_shared_memory_size(0)
-    , m_can_write(SEM_FAILED)
-    , m_can_read(SEM_FAILED)
-    , m_overtime(1000)
     , m_log(LoggerWithTag::GetLogger("SharedMemory"))
     , m_last_timestamp_us(0)
     {
@@ -42,13 +39,10 @@ public:
         Close();
     }
 
-    bool Open(std::string name, std::uint64_t overtime = 1000){
+    bool Open(std::string name){
         Close();
 
         m_name = name;
-        m_can_write_name = m_name + "CanWrite";
-        m_can_read_name = m_name + "CanRead";
-        m_overtime = overtime;
 
         // 创建或打开共享内存对象
         m_fd = ::shm_open(
@@ -94,29 +88,6 @@ public:
             m_log->error("设置 mmap 失败!");
             return false;
         }
-
-        // 初始值为1, 相当于互斥锁
-        m_can_write = ::sem_open(
-            m_can_write_name.c_str(),
-            O_CREAT,
-            0660,
-            1
-        );
-
-        // 初始值为0, 表示暂时没有新数据
-        m_can_read = ::sem_open(
-            m_can_read_name.c_str(),
-            O_CREAT,
-            0660,
-            0
-        );
-
-        if (m_can_write == SEM_FAILED || m_can_read == SEM_FAILED) {
-            m_log->error("sem_open 失败: {}", std::strerror(errno));
-            Close();
-            return false;
-        }
-
         return true;
     }
 
@@ -169,16 +140,6 @@ public:
             m_fd = -1;
         }
 
-        if (IsSemaphoreValid(m_can_write)) {
-            ::sem_close(m_can_write);
-            m_can_write = SEM_FAILED;
-        }
-
-        if (IsSemaphoreValid(m_can_read)) {
-            ::sem_close(m_can_read);
-            m_can_read = SEM_FAILED;
-        }
-
         if (m_owner) {
             Unlink();
         }
@@ -186,15 +147,9 @@ public:
         m_owner = false;
     }
 protected:
-    bool IsSemaphoreValid(sem_t* semaphore) const {
-        return semaphore != nullptr &&
-            semaphore != SEM_FAILED;
-    }
 
     void Unlink(){
         ::shm_unlink(m_name.c_str());
-        ::sem_unlink(m_can_write_name.c_str());
-        ::sem_unlink(m_can_read_name.c_str());
     }
 
     Message* GetMessage(){
@@ -206,12 +161,7 @@ private:
     int                             m_fd;
     void*                           m_address;
     std::string                     m_name;
-    std::string                     m_can_write_name;
-    std::string                     m_can_read_name;
     size_t                          m_shared_memory_size;
-    sem_t*                          m_can_write;
-    sem_t*                          m_can_read;
-    std::uint64_t                   m_overtime;
     std::shared_ptr<LoggerWithTag>  m_log;
     uint64_t                        m_last_timestamp_us;
 };

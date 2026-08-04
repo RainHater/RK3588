@@ -14,7 +14,7 @@ int main(){
         return 1;
     }
 
-    log->info("share_memory 初始化成功");
+    log->info("share_memory 初始化成功"); 
 
     auto data = share_memory.Data();
 
@@ -25,7 +25,7 @@ int main(){
         log->info("发送消息");
         share_memory.WriteFinish();
         // log->info("发送消息: {}", share_memory.GetMessageTimestampUs());
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));    
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));    
     }
 
     share_memory.Close();
