@@ -4,6 +4,7 @@
 #include "Logger.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 
 #include <fcntl.h>
@@ -16,44 +17,13 @@
 #include <unistd.h>
 #include <semaphore.h>
 
-static int FutexWait(
-    std::uint32_t* address,
-    std::uint32_t expected
-)
-{
-    return static_cast<int>(
-        ::syscall(
-            SYS_futex,
-            address,
-            FUTEX_WAIT,
-            expected,
-            nullptr,
-            nullptr,
-            0
-        )
-    );
-}
-
-static int FutexWake(
-    std::uint32_t* address,
-    int count = 1
-)
-{
-    return static_cast<int>(
-        ::syscall(
-            SYS_futex,
-            address,
-            FUTEX_WAKE,
-            count,
-            nullptr,
-            nullptr,
-            0
-        )
-    );
-}
-
 template<typename T>
 class SharedMemory{
+private:
+    struct Message{
+        std::uint64_t               timestamp_us;
+        T                           data;
+    };
 public:
     SharedMemory()
     : m_owner(false)
@@ -64,8 +34,9 @@ public:
     , m_can_read(SEM_FAILED)
     , m_overtime(1000)
     , m_log(LoggerWithTag::GetLogger("SharedMemory"))
+    , m_last_timestamp_us(0)
     {
-
+        m_shared_memory_size = sizeof(Message);
     }
     ~SharedMemory(){
         Close();
@@ -78,7 +49,6 @@ public:
         m_can_write_name = m_name + "CanWrite";
         m_can_read_name = m_name + "CanRead";
         m_overtime = overtime;
-        m_shared_memory_size = sizeof(Message);
 
         // 创建或打开共享内存对象
         m_fd = ::shm_open(
@@ -151,103 +121,27 @@ public:
     }
 
     T* Data(){
-        return static_cast<Message<T>*>(m_address);
+        auto* message = GetMessage();
+        return &message->data;
     }
 
-    // bool Wait(sem_t* semaphore){
-    //     if (semaphore == nullptr || semaphore == SEM_FAILED) {
-    //         return false;
-    //     }
-
-    //     timespec deadline {};
-
-    //     if (::clock_gettime(CLOCK_REALTIME, &deadline) == -1) {
-    //         return false;
-    //     }
-
-    //     deadline.tv_sec += static_cast<time_t>(m_overtime / 1000);
-    //     deadline.tv_nsec += static_cast<long>(
-    //         (m_overtime % 1000) * 1000000ULL
-    //     );
-
-    //     if (deadline.tv_nsec >= 1000000000L) {
-    //         ++deadline.tv_sec;
-    //         deadline.tv_nsec -= 1000000000L;
-    //     }
-
-    //     int result;
-
-    //     do {
-    //         result = ::sem_timedwait(semaphore, &deadline);
-    //     } while (result == -1 && errno == EINTR);
-
-    //     return result == 0;
-    // }
-
-    bool WriteWait(){
-        while (true) {
-            const std::uint32_t state =
-                __atomic_load_n(
-                    &m_msg.state,
-                    __ATOMIC_ACQUIRE
-                );
-
-            if (state == 0) {
-                return true;
-            }
-
-            const int result =
-                FutexWait(&m_msg.state, 1);
-
-            if (result == -1 &&
-                errno != EAGAIN &&
-                errno != EINTR) {
-                return false;
-            }
-        }
+    std::uint64_t GetMessageTimestampUs(){
+        auto* message = GetMessage();
+        return message->timestamp_us;
     }
 
     void WriteFinish(){
-        __atomic_store_n(
-            &m_msg.state,
-            1,
-            __ATOMIC_RELEASE
-        );
-
-        FutexWake(&m_msg.state, 1);
+        auto* message = GetMessage();
+        message->timestamp_us = GetTimestampUs();
     }
 
     bool ReadWait(){
-        while (true) {
-            const std::uint32_t state =
-                __atomic_load_n(
-                    &m_msg.state,
-                    __ATOMIC_ACQUIRE
-                );
-
-            if (state == 1) {
-                return true;
-            }
-
-            const int result =
-                FutexWait(&m_msg.state, 0);
-
-            if (result == -1 &&
-                errno != EAGAIN &&
-                errno != EINTR) {
-                return false;
-            }
+        auto* message = GetMessage();
+        if (m_last_timestamp_us != message->timestamp_us){
+            m_last_timestamp_us = message->timestamp_us;
+            return true;
         }
-    }
-
-    void ReadFinish(){
-        __atomic_store_n(
-            &m_msg.state,
-            0,
-            __ATOMIC_RELEASE
-        );
-
-        FutexWake(&m_msg.state, 1);
+        return false;
     }
 
     std::uint64_t GetTimestampUs(){
@@ -302,11 +196,12 @@ protected:
         ::sem_unlink(m_can_write_name.c_str());
         ::sem_unlink(m_can_read_name.c_str());
     }
+
+    Message* GetMessage(){
+        return static_cast<Message*>(m_address);
+    }
 private:
-    struct Message{
-        alignas(4) std::uint32_t    state;
-        T                           data;
-    }                               m_msg;
+    Message                         m_msg;
     bool                            m_owner;
     int                             m_fd;
     void*                           m_address;
@@ -318,6 +213,7 @@ private:
     sem_t*                          m_can_read;
     std::uint64_t                   m_overtime;
     std::shared_ptr<LoggerWithTag>  m_log;
+    uint64_t                        m_last_timestamp_us;
 };
 
 #endif

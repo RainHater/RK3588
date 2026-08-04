@@ -8,7 +8,6 @@
 struct SharedData{
     int         sequence;
     double      value;
-    uint64_t    timestamp;
 };
 
 #endif

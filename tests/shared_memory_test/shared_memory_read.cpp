@@ -15,20 +15,20 @@ int main(){
         return 1;
     }
 
+    log->info("share_memory 初始化成功");
+
     auto data = share_memory.Data();
-    uint64_t    last_timestamp = 0;
     int         sequence = 0;
 
     log->info("开始运行!");
     while(sequence < 9){
-        share_memory.ReadWait();
-        if (last_timestamp != data->timestamp){
-            last_timestamp = data->timestamp;
-            uint64_t end_time = share_memory.GetTimestampUs() - last_timestamp;
-            sequence = data->sequence;
-            log->info("接收到消息过程耗时: {} us -> sequence: {}, value: {}, timestamp: {}", end_time, data->sequence, data->value, data->timestamp);
+        if (!share_memory.ReadWait()){
+            continue;
         }
-        share_memory.ReadFinish();
+        auto message_timestamp_us = share_memory.GetMessageTimestampUs();
+        auto end_time = share_memory.GetTimestampUs() - message_timestamp_us;
+        sequence = data->sequence;
+        log->info("耗时: {} us-> sequence: {}, value: {}, message_timestamp_us: {}", end_time, data->sequence, data->value, message_timestamp_us);
     }
 
     share_memory.Close();

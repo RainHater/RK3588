@@ -14,16 +14,17 @@ int main(){
         return 1;
     }
 
+    log->info("share_memory 初始化成功");
+
     auto data = share_memory.Data();
 
     log->info("开始运行!");
     for (int i = 0; i < 10; i ++){
-        share_memory.WriteWait();
         data->sequence = i;
         data->value = float(100.0f / (i+1));
-        data->timestamp = share_memory.GetTimestampUs();
+        log->info("发送消息");
         share_memory.WriteFinish();
-        log->info("发送消息: {}", data->timestamp);
+        // log->info("发送消息: {}", share_memory.GetMessageTimestampUs());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));    
     }
 
