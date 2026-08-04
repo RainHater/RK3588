@@ -84,4 +84,5 @@ copy_directories_to_install_path(
 include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(tests/facenet_test)
+    add_subdirectory(tests/shared_memory_test)
 endif()
