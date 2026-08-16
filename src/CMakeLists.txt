@@ -1,0 +1,6 @@
+add_subdirectory(component)
+add_subdirectory(platform)
+add_subdirectory(bsp)
+add_subdirectory(device)
+add_subdirectory(service)
+add_subdirectory(app)

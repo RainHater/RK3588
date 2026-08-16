@@ -5,7 +5,7 @@ add_cpp_test(shared_memory_read
         "${CMAKE_CURRENT_LIST_DIR}/shared_memory_read.cpp"
 
     LINK_LIBRARIES
-        common_utils
+        rkplatform_platform
 
     COMMAND_ARGS
 )
@@ -17,9 +17,17 @@ add_cpp_test(shared_memory_write
         "${CMAKE_CURRENT_LIST_DIR}/shared_memory_write.cpp"
 
     LINK_LIBRARIES
-        common_utils
+        rkplatform_platform
 
     COMMAND_ARGS
+)
+
+add_cpp_test(shared_memory_reopen
+    SOURCE
+        "${CMAKE_CURRENT_LIST_DIR}/shared_memory_reopen.cpp"
+
+    LINK_LIBRARIES
+        rkplatform_platform
 )
 
 add_test(

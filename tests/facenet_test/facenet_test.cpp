@@ -1,7 +1,7 @@
 
 #include "Logger.h"
-#include "Tools.h"
-#include "RknnInference.h"
+#include "FaceProcessing.h"
+#include "InferenceDevice.h"
 
 #include <opencv2/imgcodecs.hpp>
 
@@ -10,27 +10,27 @@
 #include <vector>
 
 bool GetInputSize(
-    const rknn_tensor_attr& attr,
+    const rkplatform::device::TensorInfo& info,
     int& width, 
     int& height,
     int& channels
 )
 {
-    if (attr.n_dims != 4) {
+    if (info.shape.size() != 4) {
         return false;
     }
 
-    if (attr.fmt == RKNN_TENSOR_NHWC) {
-        height = static_cast<int>(attr.dims[1]);
-        width = static_cast<int>(attr.dims[2]);
-        channels = static_cast<int>(attr.dims[3]);
+    if (info.layout == rkplatform::device::TensorLayout::kNhwc) {
+        height = static_cast<int>(info.shape[1]);
+        width = static_cast<int>(info.shape[2]);
+        channels = static_cast<int>(info.shape[3]);
         return true;
     }
 
-    if (attr.fmt == RKNN_TENSOR_NCHW) {
-        channels = static_cast<int>(attr.dims[1]);
-        height = static_cast<int>(attr.dims[2]);
-        width = static_cast<int>(attr.dims[3]);
+    if (info.layout == rkplatform::device::TensorLayout::kNchw) {
+        channels = static_cast<int>(info.shape[1]);
+        height = static_cast<int>(info.shape[2]);
+        width = static_cast<int>(info.shape[3]);
         return true;
     }
 
@@ -51,22 +51,21 @@ int main(int argc, char* argv[]){
     const std::string image1_path = argv[2];
     const std::string image2_path = argv[3];
     
-    auto logger = LoggerWithTag::GetLogger("main");
-    RknnInference inference;
+    auto logger = rkplatform::component::logging::GetLogger("main");
+    rkplatform::device::InferenceDevice inference;
 
     if (!inference.Initialize(model_path)) {
         logger->error("初始化FaceNet模型失败: {}", model_path);
         return 1;
     }
 
-    const rknn_tensor_attr& input_attr = inference.GetInputAttr();
+    const auto& input_info = inference.GetInputInfo();
     int input_width = 0;
     int input_height = 0;
     int input_channels = 0;
 
-    if (!GetInputSize(input_attr, input_width, input_height, input_channels)) {
-        logger->error("不支持的模型输入格式, n_dims={}, fmt={}",
-                      input_attr.n_dims, static_cast<int>(input_attr.fmt));
+    if (!GetInputSize(input_info, input_width, input_height, input_channels)) {
+        logger->error("不支持的模型输入格式");
         return 1;
     }
 
@@ -85,15 +84,16 @@ int main(int argc, char* argv[]){
             return false;
         }
 
-        cv::Mat input_image = RkTools::PrepareFaceImage(bgr_image, input_width, input_height);
-        std::vector<RknnOutput> outputs;
+        cv::Mat input_image = rkplatform::service::face::PrepareFaceImage(
+            bgr_image, input_width, input_height);
+        std::vector<rkplatform::device::InferenceOutput> outputs;
         const auto begin = std::chrono::steady_clock::now();
         const bool success = inference.Infer(
             outputs,
             input_image.data,
             input_image.total() * input_image.elemSize(),
-            RKNN_TENSOR_UINT8,
-            RKNN_TENSOR_NHWC,
+            rkplatform::device::TensorDataType::kUInt8,
+            rkplatform::device::TensorLayout::kNhwc,
             false
         );
         const auto end = std::chrono::steady_clock::now();
@@ -128,7 +128,8 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    float similarity = RkTools::EmbeddingSimilarity(embedding1, embedding2);
+    float similarity = rkplatform::service::face::EmbeddingSimilarity(
+        embedding1, embedding2);
     logger->info("相同概率: {}", similarity);
 
     return 0;

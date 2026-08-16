@@ -35,52 +35,15 @@ message("APP_LIB_PATH: ${APP_LIB_PATH}")
 link_directories(${APP_LIB_PATH})
 list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
 
-include(${SCRIPTS_PATH}/cmake/Dynamic.cmake)
 include(${SCRIPTS_PATH}/cmake/Tools.cmake)
 
-add_subdirectory(src/components/utils)
-add_subdirectory(src/components/camera)
-add_subdirectory(src/components/platform/rockchip)
-
-add_executable(${PROJECT_NAME} 
-    ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
-)
-
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
-    APP_VERSION="${PROJECT_VERSION}"
-)
-
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/src
-)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    common_utils
-    common_camera
-    rockchip_inference
-)
-
-target_compile_options(${PROJECT_NAME} 
-    PRIVATE 
-    -Wall 
-    -Wextra 
-    -Wpedantic
-)
-
-INSTALL(TARGETS ${PROJECT_NAME} 
-    DESTINATION bin
-)
-
-copy_directories_to_install_path(
-    ${PROJECT_NAME}
-    "${CMAKE_SOURCE_DIR}/assets"
-)
+add_subdirectory(src)
 
 include(CTest)
+option(RKPLATFORM_ENABLE_HARDWARE_TESTS "Enable tests that require target hardware" OFF)
 if(BUILD_TESTING)
+    add_subdirectory(tests/component_test)
+    add_subdirectory(tests/device_test)
     add_subdirectory(tests/facenet_test)
     add_subdirectory(tests/shared_memory_test)
 endif()
