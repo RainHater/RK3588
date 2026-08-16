@@ -2,6 +2,7 @@
 build/
 target/
 logs/
+tmp/
 __pycache__/
 
 .DS_Store
