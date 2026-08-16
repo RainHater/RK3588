@@ -5,7 +5,7 @@
 - 必须遵守: 执行前先按照“执行规范”确认需求、有疑问先问、按规范选择工具子代理，确认后再动手。
 
 ## 项目信息
-- 必须遵守: **每次用户让你写代码、写 plan 、写 spec 时**你都需要读取 `docs/request.md`
+- 必须遵守: **每次用户让你写代码、写 `docs/plan.md` 、写 `docs/spec.md` 时**你都需要读取 `docs/request.md`
 
 ## 当前项目软件架构
 - 写代码时按照 `docs/嵌入式软件分层架构.md` 的规范来进行编写分层。
@@ -23,7 +23,7 @@
 
 ## Development And Testing
 **必须遵守以下规则:**
-- 执行用户要求的任务(如写代码、写 plan.md 以及 spec 文档)时, 必须调用 `code-reviewer` 代理去审查, 确保能达到预期效果。
+- 执行用户要求的任务(如写代码、写 `docs/plan.md` 以及 `docs/spec.md` 文档)时, 必须调用 `code-reviewer` 代理去审查, 确保能达到预期效果。
 - If the testing subagent finds bugs, fix them before considering the task complete.
 
 ## 调用 `code-reviewer` 代理审查规范
@@ -35,4 +35,4 @@
 - 审查代码是否存在冗余, 有死代码的出现
 - 审查代码是否简单实用、可靠性强、易维护、易扩展
 
-给用户看的 `Report.md` 文件用中文显示
+给用户看的 `docs/report.md` 文件用中文显示

@@ -15,7 +15,7 @@ add_cpp_test(facenet_test
             opencv_core
 
     COMMAND_ARGS
-        "${CMAKE_INSTALL_PREFIX}/bin/models/facenet-float.rknn"
-        "${CMAKE_INSTALL_PREFIX}/bin/tests/datasets/1_001.jpg"
-        "${CMAKE_INSTALL_PREFIX}/bin/tests/datasets/1_002.jpg"
+        "${CMAKE_SOURCE_DIR}/assets/models/facenet-float.rknn"
+        "${CMAKE_SOURCE_DIR}/tests/datasets/1_001.jpg"
+        "${CMAKE_SOURCE_DIR}/tests/datasets/1_002.jpg"
 )

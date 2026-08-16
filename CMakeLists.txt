@@ -38,9 +38,9 @@ list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
 include(${SCRIPTS_PATH}/cmake/Dynamic.cmake)
 include(${SCRIPTS_PATH}/cmake/Tools.cmake)
 
-add_subdirectory(dynamics/utils)
-add_subdirectory(dynamics/camera)
-add_subdirectory(dynamics/platform/rockchip)
+add_subdirectory(src/components/utils)
+add_subdirectory(src/components/camera)
+add_subdirectory(src/components/platform/rockchip)
 
 add_executable(${PROJECT_NAME} 
     ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
@@ -76,9 +76,7 @@ INSTALL(TARGETS ${PROJECT_NAME}
 
 copy_directories_to_install_path(
     ${PROJECT_NAME}
-    "${CMAKE_SOURCE_DIR}/cfg"
-    "${CMAKE_SOURCE_DIR}/models"
-    "${CMAKE_SOURCE_DIR}/tests"
+    "${CMAKE_SOURCE_DIR}/assets"
 )
 
 include(CTest)

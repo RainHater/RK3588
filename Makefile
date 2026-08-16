@@ -1,16 +1,6 @@
 include $(PWD)/scripts/make/env.mk
 
-THIRD_PARTY_TARGETS := \
-	opencv \
-	mpp \
-	rga \
-	ffmpeg-rockchip \
-	spdlog \
-	rknpu2 \
-	json \
-	jpeg_turbo \
-	stb_image \
-	fftw
+THIRD_PARTY_TARGETS := $(sort $(notdir $(patsubst %/,%,$(dir $(wildcard $(THIRD_PARTY_PYTHON_DIR)/*/run.py)))))
 
 .PHONY: all
 all: info configure build
