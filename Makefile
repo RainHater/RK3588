@@ -1,5 +1,17 @@
 include $(PWD)/scripts/make/env.mk
 
+THIRD_PARTY_TARGETS := \
+	opencv \
+	mpp \
+	rga \
+	ffmpeg-rockchip \
+	spdlog \
+	rknpu2 \
+	json \
+	jpeg_turbo \
+	stb_image \
+	fftw
+
 .PHONY: all
 all: info configure build
 
@@ -53,7 +65,6 @@ test-configure:
 test-build: test-configure
 	@echo "==> Building facenet_test..."
 	@cmake --build $(BUILD_DIR) \
-		--target facenet_test \
 		-j$(THREAD_NUM)
 
 .PHONY: test-run
@@ -62,7 +73,6 @@ test-run: test-build
 	@LD_LIBRARY_PATH=$(INSTALL_DIR)/lib:$$LD_LIBRARY_PATH \
 		ctest \
 			--test-dir $(BUILD_DIR) \
-			-R facenet_inference_test \
 			-V
 
 .PHONY: run
@@ -76,52 +86,7 @@ package:
 	$(setenvs)
 	python3 $(SCRIPTS_DIR)/python/package_ota.py
 
-.PHONY: opencv
-opencv:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: mpp
-mpp:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: rga
-rga:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: ffmpeg-rockchip
-ffmpeg-rockchip:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: spdlog
-spdlog:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: rknn
-rknpu2:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: json
-json:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: jpeg_turbo
-jpeg_turbo:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: stb_image
-stb_image:
-	$(setenvs)
-	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py
-
-.PHONY: fftw
-fftw:
+.PHONY: $(THIRD_PARTY_TARGETS)
+$(THIRD_PARTY_TARGETS):
 	$(setenvs)
 	python3 $(THIRD_PARTY_PYTHON_DIR)/$@/run.py

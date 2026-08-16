@@ -3,7 +3,8 @@
 
 #include <iostream>
 #include <memory>
-#include "FFmpegStreamer.h"
+#include <opencv2/opencv.hpp>
+
 #include "Logger.h"
 
 class V4L2Capture{
