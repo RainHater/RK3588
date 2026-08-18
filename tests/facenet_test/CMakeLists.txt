@@ -7,7 +7,7 @@ add_cpp_test(facenet_test
     LINK_LIBRARIES
             rkplatform_device_inference
             rkplatform_service_face
-            rkplatform_component
+            component_logging
 
             # OpenCV
             opencv_imgcodecs

@@ -1,26 +1,18 @@
-add_library(rkplatform_app_core STATIC
-    Application.cpp
-)
+add_module(rkplatform_app_core
+    TYPE STATIC
 
-target_include_directories(rkplatform_app_core
-    PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}
-)
+    SOURCES
+        ${CMAKE_CURRENT_LIST_DIR}/src/Application.cpp
 
-target_link_libraries(rkplatform_app_core
-    PUBLIC
-        rkplatform_component
-)
+    PUBLIC_INCLUDES
+        ${CMAKE_CURRENT_LIST_DIR}/include
 
-target_compile_options(rkplatform_app_core
-    PRIVATE
-        -Wall
-        -Wextra
-        -Wpedantic
+    PUBLIC_LIBS
+        component_logging
 )
 
 add_executable(${PROJECT_NAME}
-    main.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp
 )
 
 set_target_properties(${PROJECT_NAME}

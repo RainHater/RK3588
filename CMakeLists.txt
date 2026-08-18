@@ -35,7 +35,18 @@ message("APP_LIB_PATH: ${APP_LIB_PATH}")
 link_directories(${APP_LIB_PATH})
 list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
 
-include(${SCRIPTS_PATH}/cmake/Tools.cmake)
+# 自动加载 cmake 目录下的所有工具文件
+file(
+    GLOB CMAKE_TOOL_FILES
+    CONFIGURE_DEPENDS
+    "${SCRIPTS_PATH}/cmake/*.cmake"
+)
+list(SORT CMAKE_TOOL_FILES)
+
+foreach(CMAKE_TOOL_FILE IN LISTS CMAKE_TOOL_FILES)
+    message(STATUS "Include CMake tool: ${CMAKE_TOOL_FILE}")
+    include("${CMAKE_TOOL_FILE}")
+endforeach()
 
 add_subdirectory(src)
 
